@@ -19,6 +19,7 @@ FLAGS_FALSE=1
 FLAGS_dry_run=${FLAGS_FALSE}
 FLAGS_force=${FLAGS_FALSE}
 FLAGS_uninstall=${FLAGS_FALSE}
+FLAGS_update=${FLAGS_FALSE}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,10 +32,14 @@ while [[ $# -gt 0 ]]; do
     --uninstall)
       FLAGS_uninstall=${FLAGS_TRUE}
       ;;
+    --update)
+      FLAGS_update=${FLAGS_TRUE}
+      ;;
     --help|-h)
       echo "Usage: bash install.sh [OPTIONS]"
       echo "  --dry_run    Preview changes without writing files"
       echo "  --force      Overwrite existing files without backup"
+      echo "  --update     Update to the latest version (implies --force)"
       echo "  --uninstall  Remove all installed files"
       echo "  --help, -h   Show this help message"
       exit 0
@@ -47,12 +52,13 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 
 # --- Resolve source directory (relative to this script) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_SKILL_DIR="${SCRIPT_DIR}/skills/conductor"
 SOURCE_WORKFLOW_DIR="${SCRIPT_DIR}/workflows"
+SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor/templates"
 
 # --- Color helpers ---
 RED='\033[0;31m'
@@ -90,6 +96,10 @@ validate_sources() {
     msg_error "Source not found: ${SOURCE_SKILL_DIR}/SKILL.md"
     ((missing++))
   fi
+  if [[ ! -f "${SOURCE_TEMPLATE_DIR}/workflow_template.md" ]]; then
+    msg_error "Source not found: ${SOURCE_TEMPLATE_DIR}/workflow_template.md"
+    ((missing++))
+  fi
   for wf in implement newTrack revert review setup status; do
     if [[ ! -f "${SOURCE_WORKFLOW_DIR}/conductor_${wf}.md" ]]; then
       msg_error "Source not found: ${SOURCE_WORKFLOW_DIR}/conductor_${wf}.md"
@@ -117,8 +127,11 @@ TARGET_SKILL_DIR="${USER_HOME}/.gemini/antigravity/skills/conductor"
 TARGET_WORKFLOW_DIR="${USER_HOME}/.gemini/antigravity/global_workflows"
 
 build_target_list() {
+  TARGET_TEMPLATE_DIR="${TARGET_SKILL_DIR}/templates"
   ALL_TARGET_FILES=(
     "${TARGET_SKILL_DIR}/SKILL.md"
+    "${TARGET_TEMPLATE_DIR}/workflow_template.md"
+    "${TARGET_SKILL_DIR}/.conductor_version"
     "${TARGET_WORKFLOW_DIR}/conductor_implement.md"
     "${TARGET_WORKFLOW_DIR}/conductor_newTrack.md"
     "${TARGET_WORKFLOW_DIR}/conductor_revert.md"
@@ -175,8 +188,71 @@ install_file() {
 # Main flow
 # =============================================================================
 
+check_for_updates() {
+  local latest_version="${VERSION}"
+
+  local install_dirs=(
+    "${USER_HOME}/.gemini/antigravity/skills/conductor"
+  )
+  local found_any=false
+
+  for dir in "${install_dirs[@]}"; do
+    local version_file="${dir}/.conductor_version"
+    local skill_file="${dir}/SKILL.md"
+    local target_name="antigravity"
+
+    if [[ -f "$version_file" ]]; then
+      found_any=true
+      local installed_version
+      installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
+
+      if [[ "$installed_version" == "$latest_version" ]]; then
+        msg_success "${WHITE}${target_name}${NC}: Up to date (${WHITE}v${installed_version}${NC})"
+      else
+        echo -e "  ${YELLOW}🆕${NC}  ${WHITE}${target_name}${NC}: Update available — ${DIM}v${installed_version}${NC} → ${GREEN}v${latest_version}${NC}"
+      fi
+    elif [[ -f "$skill_file" ]]; then
+      found_any=true
+      echo -e "  ${YELLOW}🆕${NC}  ${WHITE}${target_name}${NC}: Legacy install detected (pre-v0.2.1) — update to ${GREEN}v${latest_version}${NC}"
+    fi
+  done
+
+  if [[ "$found_any" == false ]]; then
+    msg_info "No existing Conductor installations found."
+    msg_info "Run ${CYAN}install.sh${NC} to install."
+  else
+    echo ""
+    echo -e "  ${DIM}To update, run:${NC}"
+    echo -e "  ${CYAN}bash install.sh --update${NC}"
+  fi
+}
+
 banner
-build_target_list
+
+if [[ "${FLAGS_update}" -eq "${FLAGS_TRUE}" ]]; then
+  FLAGS_force="${FLAGS_TRUE}"
+
+  build_target_list
+
+  version_file="${TARGET_SKILL_DIR}/.conductor_version"
+  if [[ -f "$version_file" ]]; then
+    installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
+    if [[ "$installed_version" == "$VERSION" ]]; then
+      msg_success "Already up to date (${WHITE}v${VERSION}${NC})"
+      exit 0
+    fi
+    echo -e "  ${DIM}Installed:${NC} ${WHITE}v${installed_version}${NC}  →  ${GREEN}v${VERSION}${NC}"
+  elif [[ -f "${TARGET_SKILL_DIR}/SKILL.md" ]]; then
+    echo -e "  ${DIM}Installed:${NC} ${YELLOW}pre-v0.2.1 (legacy)${NC}  →  ${GREEN}v${VERSION}${NC}"
+  else
+    msg_info "No existing installation found. Performing fresh install."
+  fi
+  echo ""
+fi
+
+if [[ -z "${INSTALL_TARGET:-}" ]]; then
+  build_target_list
+fi
 
 echo -e "  ${DIM}Target:${NC}  ${WHITE}${INSTALL_TARGET}${NC}"
 
@@ -235,6 +311,19 @@ section "🧠 Installing Conductor Skill"
 echo ""
 install_file "${SOURCE_SKILL_DIR}/SKILL.md" "${TARGET_SKILL_DIR}/SKILL.md"
 
+# --- Templates ---
+section "📄 Installing Conductor Templates"
+echo ""
+install_file "${SOURCE_TEMPLATE_DIR}/workflow_template.md" "${TARGET_TEMPLATE_DIR}/workflow_template.md"
+
+# --- Write version stamp ---
+if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
+  msg_info "${YELLOW}[dry-run]${NC} Would write version file: ${GREEN}.conductor_version${NC}"
+else
+  echo "$VERSION" > "${TARGET_SKILL_DIR}/.conductor_version"
+  msg_success "Wrote version stamp: ${GREEN}v${VERSION}${NC}"
+fi
+
 # --- Workflows ---
 section "🔧 Installing Conductor Workflows"
 echo ""
@@ -259,3 +348,5 @@ else
   echo -e "  ${GREEN}🚀 Installation complete! You're ready to conduct.${NC}"
 fi
 echo ""
+
+check_for_updates
