@@ -58,6 +58,9 @@ these files (in order of priority):
 **Purpose:** Initialize or update the project's Conductor context (run once per
 project).
 
+> **Full interaction protocol:** See the `conductor_setup` workflow file for the
+> complete interactive prompting script.
+
 **Steps:**
 
 1.  Check if `conductor/` directory exists.
@@ -68,13 +71,15 @@ project).
     -   `conductor/product-guidelines.md` — Ask about tone, visual identity, UX
         patterns
     -   `conductor/tech-stack.md` — Ask about languages, frameworks, databases
-    -   `conductor/workflow.md` — Copy the template from
-        `skills/conductor/templates/workflow_template.md` and customize
+    -   `conductor/workflow.md` — Copy the template from the bundled
+        `templates/workflow_template.md` (located alongside this SKILL.md) and
+        customize based on user responses
     -   `conductor/code_styleguides/` — Generate style guides for each language
         in use
     -   `conductor/tracks.md` — Initialize empty track registry
     -   `conductor/index.md` — Generate links to all context files
 4.  Update `conductor/setup_state.json` after each successful step.
+5.  **Never generate two artifacts without a user interaction in between.**
 
 --------------------------------------------------------------------------------
 
@@ -82,6 +87,9 @@ project).
 
 **Purpose:** Start a new feature or bug fix track with a specification and
 phased plan.
+
+> **Full interaction protocol:** See the `conductor_newTrack` workflow file for
+> the complete interactive prompting script.
 
 **Syntax:**
 
@@ -185,6 +193,10 @@ phased plan.
 **Purpose:** Execute the plan for the current active track, working through
 tasks sequentially.
 
+> **Full interaction protocol:** See the `conductor_implement` workflow file for
+> the complete execution protocol including TDD lifecycle and phase
+> checkpointing.
+
 **Steps:**
 
 1.  **Load Context:** Read all conductor context files.
@@ -220,6 +232,8 @@ behavior. Always defer to it.
 ### `/conductor_status`
 
 **Purpose:** Get a high-level overview of project progress.
+
+> **Full interaction protocol:** See the `conductor_status` workflow file.
 
 **Steps:**
 
@@ -258,6 +272,9 @@ behavior. Always defer to it.
 
 **Purpose:** Undo work from a track, phase, or task.
 
+> **Full interaction protocol:** See the `conductor_revert` workflow file for
+> the complete revert protocol including scope selection and confirmation.
+
 **Steps:**
 
 1.  Read `conductor/tracks.md` to identify the current active track.
@@ -277,6 +294,9 @@ behavior. Always defer to it.
 ### `/conductor_review`
 
 **Purpose:** Review completed work against specifications and guidelines.
+
+> **Full interaction protocol:** See the `conductor_review` workflow file for
+> the complete review protocol including acceptance criteria checking.
 
 **Steps:**
 
@@ -311,11 +331,34 @@ When a track is completed, its directory can be moved from `conductor/tracks/`
 to `conductor/archive/` for cleanliness. The track entry in `tracks.md` should
 be updated with the new link path.
 
+## Conductor Guardrails
+
+When operating as the Conductor agent, always follow these safety rules:
+
+-   **Never modify conductor files outside the active track** — only update
+    files in `conductor/tracks/<active_track_id>/` and `conductor/tracks.md`
+    during implementation.
+-   **Always confirm before overwriting user-approved specs or plans** — if a
+    spec or plan has been explicitly approved, do not modify it without asking.
+-   **Ask before destructive operations** — do not delete tracks, revert
+    commits, or remove conductor artifacts without explicit user confirmation.
+-   **One artifact at a time during setup** — never generate two setup
+    artifacts without a user interaction in between.
+-   **Spec and plan approval gates** — during `/conductor_newTrack`, always
+    present the spec and plan for explicit user approval before proceeding.
+
 ## Locating the Conductor Directory
 
-Before operating on any conductor files or creating the `conductor/` directory,
-**you MUST ask the user to explicitly specify the project root path** (e.g.,
-the google3 package path where the directory exists or should be created).
-Do not attempt to automatically guess or determine the directory from the current
-working context. Use the user-provided path as the `{PROJECT_ROOT}` for all
-conductor operations in the session.
+Before operating on any conductor files, locate the project root using this
+priority order:
+
+1.  **Walk up from the current working directory** — check each parent for a
+    `conductor/` subdirectory.
+2.  **Check the Git repository root** — run `git rev-parse --show-toplevel` and
+    check for `conductor/` there.
+3.  **Ask the user** — if neither search finds a `conductor/` directory, prompt
+    the user to specify the project root path.
+
+Once resolved, use the path as `{PROJECT_ROOT}` for all conductor operations
+in the session. For `/conductor_setup`, if no existing directory is found, ask
+the user where to create it.

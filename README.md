@@ -44,6 +44,8 @@ File                     | Location                             | Purpose
 `conductor_status.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_status` — View project progress
 `conductor_review.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_review` — Review work against spec
 `conductor_revert.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_revert` — Undo work via VCS-aware revert
+`workflow_template.md`   | `~/.gemini/antigravity/skills/conductor/templates/` | Bundled workflow template copied to projects during `/conductor_setup`
+`.conductor_version`     | `~/.gemini/antigravity/skills/conductor/` | Version stamp for update detection
 
 ## Installation
 
@@ -93,8 +95,21 @@ Flag          | Description
 ------------- | --------------------------------------------------------
 `--dry_run`   | Preview changes without writing or deleting files
 `--force`     | Overwrite existing files without creating `.bak` backups
+`--update`    | Update to the latest version (implies `--force`)
 `--uninstall` | Remove all installed Conductor files
 `--help`      | Show usage information
+
+## Checking for Updates
+
+The `--update` flag checks if your installed version is current and, if not,
+performs the update automatically (implying `--force`):
+
+```bash
+bash install.sh --update
+```
+
+If already up to date, it exits immediately. A version check also runs
+automatically at the end of every regular install.
 
 ## Usage After Installation
 
@@ -127,4 +142,4 @@ appropriate command based on your prompt.
 
 ## Version
 
-Current: **v0.2.0**
+Current: **v0.2.1**
