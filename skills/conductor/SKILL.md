@@ -51,6 +51,43 @@ these files (in order of priority):
 4.  `conductor/workflow.md` — Task workflow & coding practices
 5.  `conductor/tracks.md` — Current track registry
 
+## Artifact Output Convention
+
+Whenever a Conductor command produces **structured output that requires user
+review** — clarifying questions, reports, summaries, specs, plans, or
+confirmation prompts — **always write it as a Jetski artifact** using
+`write_to_file` with `IsArtifact: true` and present it via `notify_user` with
+`PathsToReview`.
+
+### Artifact Types
+
+- **`walkthrough`** — Review reports, status dashboards, phase verification
+  plans
+- **`implementation_plan`** — Specs, plans, and proposals
+- **`other`** — Clarifying questions, confirmation prompts, revert previews
+
+### Naming Convention
+
+Artifact filenames follow the pattern: `conductor_<command>_<context>.md`
+
+Examples: `conductor_setup_product_questions.md`,
+`conductor_review_dark_mode_toggle.md`, `conductor_status.md`
+
+### Formatting
+
+Use rich markdown in artifacts: **tables**, **alerts** (`[!NOTE]`, `[!TIP]`,
+`[!IMPORTANT]`, `[!WARNING]`), **file links** (`[file.ts](file:///path)`),
+**mermaid diagrams**, and **code blocks** where useful.
+
+### Blocking
+
+Set `BlockedOnUser: true` in `notify_user` when the artifact contains questions
+or requires explicit approval before proceeding. Set `BlockedOnUser: false` for
+informational outputs (status, review reports) unless a disposition choice is
+required.
+
+---
+
 ## Commands
 
 ### `/conductor_setup`
@@ -67,21 +104,21 @@ project).
 2.  If it exists, read `conductor/setup_state.json` to determine what's already
     configured.
 3.  For each missing artifact, interactively guide the user to create:
-    -   `conductor/product.md` — Ask about project vision, users, goals
-    -   `conductor/product-guidelines.md` — Ask about tone, visual identity, UX
-        patterns
-    -   `conductor/tech-stack.md` — Ask about languages, frameworks, databases
-    -   `conductor/workflow.md` — Copy the template from the bundled
-        `templates/workflow_template.md` (located alongside this SKILL.md) and
-        customize based on user responses
-    -   `conductor/code_styleguides/` — Generate style guides for each language
-        in use
-    -   `conductor/tracks.md` — Initialize empty track registry
-    -   `conductor/index.md` — Generate links to all context files
+    - `conductor/product.md` — Ask about project vision, users, goals
+    - `conductor/product-guidelines.md` — Ask about tone, visual identity, UX
+      patterns
+    - `conductor/tech-stack.md` — Ask about languages, frameworks, databases
+    - `conductor/workflow.md` — Copy the template from the bundled
+      `templates/workflow_template.md` (located alongside this SKILL.md) and
+      customize based on user responses
+    - `conductor/code_styleguides/` — Generate style guides for each language
+      in use
+    - `conductor/tracks.md` — Initialize empty track registry
+    - `conductor/index.md` — Generate links to all context files
 4.  Update `conductor/setup_state.json` after each successful step.
 5.  **Never generate two artifacts without a user interaction in between.**
 
---------------------------------------------------------------------------------
+---
 
 ### `/conductor_newTrack`
 
@@ -93,8 +130,8 @@ phased plan.
 
 **Syntax:**
 
--   `/conductor_newTrack` — Interactive mode (ask user for description)
--   `/conductor_newTrack "description of feature or bug"` — Direct mode
+- `/conductor_newTrack` — Interactive mode (ask user for description)
+- `/conductor_newTrack "description of feature or bug"` — Direct mode
 
 **Steps:**
 
@@ -104,60 +141,58 @@ phased plan.
     `dark_mode_toggle_20260218`).
 3.  **Create Track Directory:** `conductor/tracks/<track_id>/`
 4.  **Generate Specification (`spec.md`):**
+    - Research the codebase to understand relevant existing code.
+    - Ask the user clarifying questions about requirements.
+    - Write the spec following this structure:
 
-    -   Research the codebase to understand relevant existing code.
-    -   Ask the user clarifying questions about requirements.
-    -   Write the spec following this structure:
+      ```markdown
+      # Specification: <Track Title>
 
-        ```markdown
-        # Specification: <Track Title>
+      ## Overview
 
-        ## Overview
+      <Brief description and context>
 
-        <Brief description and context>
+      ## Functional Requirements
 
-        ## Functional Requirements
+      - <Detailed requirements>
 
-        - <Detailed requirements>
+      ## UI/UX Details
 
-        ## UI/UX Details
+      - <If applicable, reference Figma or design details>
 
-        - <If applicable, reference Figma or design details>
+      ## Acceptance Criteria
 
-        ## Acceptance Criteria
+      - [ ] <Testable criteria>
 
-        - [ ] <Testable criteria>
+      ## Out of Scope
 
-        ## Out of Scope
+      - <Explicit exclusions>
+      ```
 
-        - <Explicit exclusions>
-        ```
-
-    -   **Present spec to user for review before proceeding.**
+    - **Present spec to user for review before proceeding.**
 
 5.  **Generate Plan (`plan.md`):**
+    - Break the spec into phased implementation with tasks and sub-tasks.
+    - Follow TDD workflow from `conductor/workflow.md`.
+    - Each phase ends with a "Conductor - User Manual Verification" task.
+    - Structure:
 
-    -   Break the spec into phased implementation with tasks and sub-tasks.
-    -   Follow TDD workflow from `conductor/workflow.md`.
-    -   Each phase ends with a "Conductor - User Manual Verification" task.
-    -   Structure:
+      ```markdown
+      # Implementation Plan - <Track Title>
 
-        ```markdown
-        # Implementation Plan - <Track Title>
+      ## Phase 1: <Phase Name>
 
-        ## Phase 1: <Phase Name>
+      - [ ] Task: <Task Name>
+        - [ ] <Sub-task>
+        - [ ] <Sub-task>
+      - [ ] Task: Conductor - User Manual Verification 'Phase 1: <Phase Name>' (Protocol in workflow.md)
 
-        - [ ] Task: <Task Name>
-          - [ ] <Sub-task>
-          - [ ] <Sub-task>
-        - [ ] Task: Conductor - User Manual Verification 'Phase 1: <Phase Name>' (Protocol in workflow.md)
+      ## Phase 2: <Phase Name>
 
-        ## Phase 2: <Phase Name>
+      ...
+      ```
 
-        ...
-        ```
-
-    -   **Present plan to user for review before proceeding.**
+    - **Present plan to user for review before proceeding.**
 
 6.  **Generate Metadata (`metadata.json`):**
 
@@ -183,10 +218,10 @@ phased plan.
     ```
 
 8.  **Update Registry:** Add entry to `conductor/tracks.md`: `markdown - [ ]
-    **Track: <Track Title>** _Link:
-    [./tracks/<track_id>/](./tracks/<track_id>/)_`
+**Track: <Track Title>** _Link:
+[./tracks/<track_id>/](./tracks/<track_id>/)_`
 
---------------------------------------------------------------------------------
+---
 
 ### `/conductor_implement`
 
@@ -205,29 +240,29 @@ tasks sequentially.
 3.  **Read Track Plan:** Load `conductor/tracks/<track_id>/plan.md`.
 4.  **Execute Tasks Sequentially** following the workflow defined in
     `conductor/workflow.md`:
-    -   Find the next `[ ]` task in the plan.
-    -   Mark it as `[~]` (in-progress).
-    -   Follow the Standard Task Workflow from `conductor/workflow.md`:
-        1.  Critical examination & ambiguity resolution
-        2.  Write failing tests (Red Phase) if TDD is configured
-        3.  Implement to pass tests (Green Phase)
-        4.  Refactor
-        5.  Verify coverage
-        6.  Document deviations
-    -   Mark completed tasks as `[x]`.
-    -   Update `metadata.json` with `"status": "in_progress"` and new timestamp.
+    - Find the next `[ ]` task in the plan.
+    - Mark it as `[~]` (in-progress).
+    - Follow the Standard Task Workflow from `conductor/workflow.md`:
+      1.  Critical examination & ambiguity resolution
+      2.  Write failing tests (Red Phase) if TDD is configured
+      3.  Implement to pass tests (Green Phase)
+      4.  Refactor
+      5.  Verify coverage
+      6.  Document deviations
+    - Mark completed tasks as `[x]`.
+    - Update `metadata.json` with `"status": "in_progress"` and new timestamp.
 5.  **Phase Verification:** When a phase is complete, follow the Phase
     Completion Verification and Checkpointing Protocol from
     `conductor/workflow.md`.
 6.  **Track Completion:** When all phases are done:
-    -   Update `metadata.json` with `"status": "completed"`.
-    -   Mark the track as `[x]` in `conductor/tracks.md`.
+    - Update `metadata.json` with `"status": "completed"`.
+    - Mark the track as `[x]` in `conductor/tracks.md`.
 
 **Important:** The user's `conductor/workflow.md` is the authoritative source
 for task workflow, commit conventions, quality gates, and checkpointing
 behavior. Always defer to it.
 
---------------------------------------------------------------------------------
+---
 
 ### `/conductor_status`
 
@@ -238,9 +273,9 @@ behavior. Always defer to it.
 **Steps:**
 
 1.  Read `conductor/tracks.md` and display:
-    -   Total tracks, completed, in-progress, pending.
-    -   For each in-progress track, read its `plan.md` and show phase/task
-        progress.
+    - Total tracks, completed, in-progress, pending.
+    - For each in-progress track, read its `plan.md` and show phase/task
+      progress.
 2.  Format output as a clear summary table.
 
 **Output format:**
@@ -266,7 +301,7 @@ behavior. Always defer to it.
 - Phase 3: ⬜ Pending
 ```
 
---------------------------------------------------------------------------------
+---
 
 ### `/conductor_revert`
 
@@ -279,17 +314,17 @@ behavior. Always defer to it.
 
 1.  Read `conductor/tracks.md` to identify the current active track.
 2.  Ask user what to revert:
-    -   **Entire track:** Revert all commits associated with the track.
-    -   **Current phase:** Revert to the last phase checkpoint.
-    -   **Last task:** Revert the most recent task commit.
-3.  Detect the workspace VCS type (git, hg/Fig, or g4/Piper) and use its
+    - **Entire track:** Revert all commits associated with the track.
+    - **Current phase:** Revert to the last phase checkpoint.
+    - **Last task:** Revert the most recent task commit.
+3.  Detect the workspace VCS type (git, hg/Mercurial, or jj) and use its
     history commands with checkpoint SHAs from `plan.md` to identify the
-    change range (e.g., `git log`, `hg log`, or `g4 changes`).
+    change range (e.g., `git log`, `hg log`, or `jj log`).
 4.  Execute the appropriate revert command for the detected VCS
-    (e.g., `git revert`, `hg backout`, or `g4 revert`).
+    (e.g., `git revert`, `hg backout`, or `jj restore`).
 5.  Update `plan.md` and `tracks.md` status markers accordingly.
 
---------------------------------------------------------------------------------
+---
 
 ### `/conductor_review`
 
@@ -303,27 +338,27 @@ behavior. Always defer to it.
 1.  Read the active track's `spec.md` and `plan.md`.
 2.  Read `conductor/product-guidelines.md`.
 3.  Review all changed files using the workspace's VCS diff command
-    (e.g., `git diff`, `hg diff`, or `g4 diff`) against the track start point.
+    (e.g., `git diff`, `hg diff`, or `jj diff`) against the track start point.
 4.  Evaluate against:
-    -   Acceptance criteria from `spec.md`
-    -   Quality gates from `conductor/workflow.md`
-    -   Style guides from `conductor/code_styleguides/`
+    - Acceptance criteria from `spec.md`
+    - Quality gates from `conductor/workflow.md`
+    - Style guides from `conductor/code_styleguides/`
 5.  Generate a review report with:
-    -   ✅ Criteria met
-    -   ⚠️ Warnings
-    -   ❌ Issues to address
+    - ✅ Criteria met
+    - ⚠️ Warnings
+    - ❌ Issues to address
 
---------------------------------------------------------------------------------
+---
 
 ## Task Status Markers
 
 These markers are used consistently in `plan.md` and `tracks.md`:
 
-Marker | Meaning
------- | ---------------------
-`[ ]`  | Pending / Not started
-`[~]`  | In progress
-`[x]`  | Completed
+| Marker | Meaning               |
+| ------ | --------------------- |
+| `[ ]`  | Pending / Not started |
+| `[~]`  | In progress           |
+| `[x]`  | Completed             |
 
 ## Track Archival
 
@@ -335,17 +370,17 @@ be updated with the new link path.
 
 When operating as the Conductor agent, always follow these safety rules:
 
--   **Never modify conductor files outside the active track** — only update
-    files in `conductor/tracks/<active_track_id>/` and `conductor/tracks.md`
-    during implementation.
--   **Always confirm before overwriting user-approved specs or plans** — if a
-    spec or plan has been explicitly approved, do not modify it without asking.
--   **Ask before destructive operations** — do not delete tracks, revert
-    commits, or remove conductor artifacts without explicit user confirmation.
--   **One artifact at a time during setup** — never generate two setup
-    artifacts without a user interaction in between.
--   **Spec and plan approval gates** — during `/conductor_newTrack`, always
-    present the spec and plan for explicit user approval before proceeding.
+- **Never modify conductor files outside the active track** — only update
+  files in `conductor/tracks/<active_track_id>/` and `conductor/tracks.md`
+  during implementation.
+- **Always confirm before overwriting user-approved specs or plans** — if a
+  spec or plan has been explicitly approved, do not modify it without asking.
+- **Ask before destructive operations** — do not delete tracks, revert
+  commits, or remove conductor artifacts without explicit user confirmation.
+- **One artifact at a time during setup** — never generate two setup
+  artifacts without a user interaction in between.
+- **Spec and plan approval gates** — during `/conductor_newTrack`, always
+  present the spec and plan for explicit user approval before proceeding.
 
 ## Locating the Conductor Directory
 
