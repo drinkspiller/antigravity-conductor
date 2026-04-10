@@ -57,8 +57,9 @@ VERSION="0.2.1"
 # --- Resolve source directory (relative to this script) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_SKILL_DIR="${SCRIPT_DIR}/skills/conductor"
-SOURCE_WORKFLOW_DIR="${SCRIPT_DIR}/workflows"
 SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor/templates"
+# Sub-skill names (each has its own directory under skills/)
+SUB_SKILL_NAMES=(conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert)
 
 # --- Color helpers ---
 RED='\033[0;31m'
@@ -100,9 +101,9 @@ validate_sources() {
     msg_error "Source not found: ${SOURCE_TEMPLATE_DIR}/workflow_template.md"
     ((missing++))
   fi
-  for wf in implement newTrack revert review setup status; do
-    if [[ ! -f "${SOURCE_WORKFLOW_DIR}/conductor_${wf}.md" ]]; then
-      msg_error "Source not found: ${SOURCE_WORKFLOW_DIR}/conductor_${wf}.md"
+  for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
+    if [[ ! -f "${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md" ]]; then
+      msg_error "Source not found: ${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md"
       ((missing++))
     fi
   done
@@ -123,7 +124,8 @@ else
 fi
 
 INSTALL_TARGET="antigravity"
-TARGET_SKILL_DIR="${USER_HOME}/.gemini/antigravity/skills/conductor"
+TARGET_SKILLS_ROOT="${USER_HOME}/.gemini/antigravity/skills"
+TARGET_SKILL_DIR="${TARGET_SKILLS_ROOT}/conductor"
 TARGET_WORKFLOW_DIR="${USER_HOME}/.gemini/antigravity/global_workflows"
 
 build_target_list() {
@@ -132,13 +134,11 @@ build_target_list() {
     "${TARGET_SKILL_DIR}/SKILL.md"
     "${TARGET_TEMPLATE_DIR}/workflow_template.md"
     "${TARGET_SKILL_DIR}/.conductor_version"
-    "${TARGET_WORKFLOW_DIR}/conductor_implement.md"
-    "${TARGET_WORKFLOW_DIR}/conductor_newTrack.md"
-    "${TARGET_WORKFLOW_DIR}/conductor_revert.md"
-    "${TARGET_WORKFLOW_DIR}/conductor_review.md"
-    "${TARGET_WORKFLOW_DIR}/conductor_setup.md"
-    "${TARGET_WORKFLOW_DIR}/conductor_status.md"
   )
+  # Add each sub-skill SKILL.md
+  for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
+    ALL_TARGET_FILES+=("${TARGET_SKILLS_ROOT}/${sub_skill}/SKILL.md")
+  done
 }
 
 # --- Helper: install a single file ---
@@ -324,11 +324,11 @@ else
   msg_success "Wrote version stamp: ${GREEN}v${VERSION}${NC}"
 fi
 
-# --- Workflows ---
-section "🔧 Installing Conductor Workflows"
+# --- Sub-Skills ---
+section "🔧 Installing Conductor Command Skills"
 echo ""
-for wf in implement newTrack revert review setup status; do
-  install_file "${SOURCE_WORKFLOW_DIR}/conductor_${wf}.md" "${TARGET_WORKFLOW_DIR}/conductor_${wf}.md"
+for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
+  install_file "${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md" "${TARGET_SKILLS_ROOT}/${sub_skill}/SKILL.md"
 done
 
 # --- Summary ---
@@ -338,7 +338,7 @@ echo -e "  ${DIM}Version:${NC}       ${WHITE}${VERSION}${NC}"
 echo -e "  ${DIM}Target:${NC}        ${WHITE}${INSTALL_TARGET}${NC}"
 echo -e "  ${DIM}Source:${NC}        ${CYAN}${SCRIPT_DIR}${NC}"
 echo -e "  ${DIM}Skill dir:${NC}     ${CYAN}${TARGET_SKILL_DIR}${NC}"
-echo -e "  ${DIM}Workflow dir:${NC}  ${CYAN}${TARGET_WORKFLOW_DIR}${NC}"
+echo -e "  ${DIM}Sub-skills:${NC}    ${CYAN}${TARGET_SKILLS_ROOT}/conductor_*/${NC}"
 echo -e "  ${DIM}Files:${NC}         ${WHITE}${#ALL_TARGET_FILES[@]}${NC} total"
 echo ""
 

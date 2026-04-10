@@ -1,4 +1,4 @@
-# Antigravity Conductor Skills & Workflows
+# Antigravity Conductor Skills
 
 ## Background
 
@@ -7,7 +7,7 @@ Gemini CLI extension that enables Context-Driven Development. It manages the
 full lifecycle of software development tracks: context setup, specification,
 planning, implementation, and review.
 
-This installer creates an **Antigravity Skill and workflows** that bring Conductor's
+This installer creates **Antigravity Skills** that bring Conductor's
 capabilities to Antigravity.
 
 ## Motivation
@@ -38,12 +38,12 @@ context that the whole team can use.
 File                     | Location                             | Purpose
 ------------------------ | ------------------------------------ | -------
 `SKILL.md`               | `~/.gemini/antigravity/skills/conductor/` | Core skill definition (commands, context loading, track lifecycle)
-`conductor_setup.md`     | `~/.gemini/antigravity/global_workflows/` | `/conductor_setup` — Initialize project context
-`conductor_newTrack.md`  | `~/.gemini/antigravity/global_workflows/` | `/conductor_newTrack` — Start a new feature or bug fix
-`conductor_implement.md` | `~/.gemini/antigravity/global_workflows/` | `/conductor_implement` — Execute plan tasks sequentially
-`conductor_status.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_status` — View project progress
-`conductor_review.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_review` — Review work against spec
-`conductor_revert.md`    | `~/.gemini/antigravity/global_workflows/` | `/conductor_revert` — Undo work via VCS-aware revert
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_setup/` | `/conductor_setup` — Initialize project context
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_newTrack/` | `/conductor_newTrack` — Start a new feature or bug fix
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_implement/` | `/conductor_implement` — Execute plan tasks sequentially
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_status/` | `/conductor_status` — View project progress
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_review/` | `/conductor_review` — Review work against spec
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_revert/` | `/conductor_revert` — Undo work via VCS-aware revert
 `workflow_template.md`   | `~/.gemini/antigravity/skills/conductor/templates/` | Bundled workflow template copied to projects during `/conductor_setup`
 `.conductor_version`     | `~/.gemini/antigravity/skills/conductor/` | Version stamp for update detection
 

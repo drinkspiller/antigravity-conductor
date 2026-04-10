@@ -38,22 +38,21 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 set "SOURCE_SKILL_DIR=%SCRIPT_DIR%\skills\conductor"
-set "SOURCE_WORKFLOW_DIR=%SCRIPT_DIR%\workflows"
 set "SOURCE_TEMPLATE_DIR=%SCRIPT_DIR%\skills\conductor\templates"
 
-set "TARGET_SKILL_DIR=%USERPROFILE%\.gemini\antigravity\skills\conductor"
-set "TARGET_WORKFLOW_DIR=%USERPROFILE%\.gemini\antigravity\global_workflows"
+set "TARGET_SKILLS_ROOT=%USERPROFILE%\.gemini\antigravity\skills"
+set "TARGET_SKILL_DIR=%TARGET_SKILLS_ROOT%\conductor"
 set "TARGET_TEMPLATE_DIR=%TARGET_SKILL_DIR%\templates"
 
 set "ALL_TARGET_FILES[0]=%TARGET_SKILL_DIR%\SKILL.md"
-set "ALL_TARGET_FILES[1]=%TARGET_WORKFLOW_DIR%\conductor_implement.md"
-set "ALL_TARGET_FILES[2]=%TARGET_WORKFLOW_DIR%\conductor_newTrack.md"
-set "ALL_TARGET_FILES[3]=%TARGET_WORKFLOW_DIR%\conductor_revert.md"
-set "ALL_TARGET_FILES[4]=%TARGET_WORKFLOW_DIR%\conductor_review.md"
-set "ALL_TARGET_FILES[5]=%TARGET_WORKFLOW_DIR%\conductor_setup.md"
-set "ALL_TARGET_FILES[6]=%TARGET_WORKFLOW_DIR%\conductor_status.md"
-set "ALL_TARGET_FILES[7]=%TARGET_TEMPLATE_DIR%\workflow_template.md"
-set "ALL_TARGET_FILES[8]=%TARGET_SKILL_DIR%\.conductor_version"
+set "ALL_TARGET_FILES[1]=%TARGET_TEMPLATE_DIR%\workflow_template.md"
+set "ALL_TARGET_FILES[2]=%TARGET_SKILL_DIR%\.conductor_version"
+set "ALL_TARGET_FILES[3]=%TARGET_SKILLS_ROOT%\conductor_setup\SKILL.md"
+set "ALL_TARGET_FILES[4]=%TARGET_SKILLS_ROOT%\conductor_newTrack\SKILL.md"
+set "ALL_TARGET_FILES[5]=%TARGET_SKILLS_ROOT%\conductor_implement\SKILL.md"
+set "ALL_TARGET_FILES[6]=%TARGET_SKILLS_ROOT%\conductor_status\SKILL.md"
+set "ALL_TARGET_FILES[7]=%TARGET_SKILLS_ROOT%\conductor_review\SKILL.md"
+set "ALL_TARGET_FILES[8]=%TARGET_SKILLS_ROOT%\conductor_revert\SKILL.md"
 
 echo.
 echo   ==================================================
@@ -83,8 +82,8 @@ if "%FLAGS_uninstall%"=="1" goto :do_uninstall
 :: Validate sources
 if not exist "%SOURCE_SKILL_DIR%\SKILL.md" ( echo [ERROR] Missing %SOURCE_SKILL_DIR%\SKILL.md & exit /b 1 )
 if not exist "%SOURCE_TEMPLATE_DIR%\workflow_template.md" ( echo [ERROR] Missing %SOURCE_TEMPLATE_DIR%\workflow_template.md & exit /b 1 )
-for %%W in (implement newTrack revert review setup status) do (
-    if not exist "%SOURCE_WORKFLOW_DIR%\conductor_%%W.md" ( echo [ERROR] Missing %SOURCE_WORKFLOW_DIR%\conductor_%%W.md & exit /b 1 )
+for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert) do (
+    if not exist "%SCRIPT_DIR%\skills\%%S\SKILL.md" ( echo [ERROR] Missing %SCRIPT_DIR%\skills\%%S\SKILL.md & exit /b 1 )
 )
 
 if "%FLAGS_dry_run%"=="1" echo   [DRY RUN MODE - no files will be written]
@@ -107,18 +106,18 @@ if "%FLAGS_dry_run%"=="1" (
     echo Wrote version stamp: v%VERSION%
 )
 
-:: Workflows
+:: Sub-Skills
 echo.
-echo --- Installing Conductor Workflows ---
-for %%W in (implement newTrack revert review setup status) do (
-    call :install_file "%SOURCE_WORKFLOW_DIR%\conductor_%%W.md" "%TARGET_WORKFLOW_DIR%\conductor_%%W.md"
+echo --- Installing Conductor Command Skills ---
+for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert) do (
+    call :install_file "%SCRIPT_DIR%\skills\%%S\SKILL.md" "%TARGET_SKILLS_ROOT%\%%S\SKILL.md"
 )
 
 echo.
 echo --- Summary ---
 echo   Target:       antigravity
 echo   Skill dir:    %TARGET_SKILL_DIR%
-echo   Workflow dir: %TARGET_WORKFLOW_DIR%
+echo   Sub-skills:   %TARGET_SKILLS_ROOT%\conductor_*\
 if "%FLAGS_dry_run%"=="1" ( echo   Dry run complete. ) else ( echo   Installation complete! )
 call :check_for_updates
 exit /b 0
