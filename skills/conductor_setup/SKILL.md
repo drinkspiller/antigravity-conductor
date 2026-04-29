@@ -12,6 +12,73 @@ project).
 skill folder) for full context on directory structure, conventions, and
 lifecycle rules.
 
+## `ask_question` Best Practices
+
+The `ask_question` modal renders text with **limited formatting** — markdown
+syntax like `**bold**`, backticks, and numbered lists display as raw characters.
+Follow these rules to keep questions readable:
+
+1.  **Short questions only.** The `question` field must be a single concise
+    sentence (aim for ≤ 15 words). Never put analysis, findings, code
+    references, status reports, or multi-line content in the question.
+2.  **Report first, ask second.** Present any analysis, findings, or context as
+    **regular text in your response** (where markdown renders properly), then
+    call `ask_question` with only the decision question and options.
+3.  **Options are the user's voice.** Each option string should read as
+    something the user would say — not a description of what you will do.
+4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
+    decision has nuance.
+
+### Examples
+
+**BAD — scan results dumped into the question:**
+
+```
+question: "A brownfield project detected. Found package.json with React 18,
+TypeScript 5.3, 47 source files in src/, 12 test files, BUILD files present.
+May I perform a read-only scan of the codebase to extract the tech stack?"
+options: ["Yes", "No"]
+```
+
+**GOOD — scan summary as text, question is short with nuanced options:**
+
+First, output findings as regular markdown:
+
+> **Brownfield project detected.** I found `package.json` with React 18,
+> TypeScript 5.3, 47 source files in `src/`, and BUILD files present.
+
+Then call `ask_question`:
+
+```
+question: "May I perform a read-only codebase scan?"
+options: [
+  "Yes, scan everything",
+  "Yes, but skip test files",
+  "No, I'll describe the stack manually",
+  "Show me what directories you'd scan first"
+]
+```
+
+**More good examples:**
+
+```
+question: "How should I draft product.md?"
+options: [
+  "Interactive — walk me through questions",
+  "Autogenerate from project context",
+  "Start from a template I'll customize"
+]
+```
+
+```
+question: "Here's the draft. What do you think?"
+options: [
+  "Approve — looks good",
+  "Suggest changes — I'll describe them",
+  "Start over with a different approach"
+]
+```
+
 ## Protocol
 
 1.  **Get Project Root:** Ask the user to specify the project root path where

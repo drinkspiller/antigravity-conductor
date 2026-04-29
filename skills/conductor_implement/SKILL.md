@@ -12,6 +12,90 @@ tasks sequentially, synchronizing documentation, and managing track cleanup.
 skill folder) for full context on directory structure, conventions, and
 lifecycle rules.
 
+## `ask_question` Best Practices
+
+The `ask_question` modal renders text with **limited formatting** — markdown
+syntax like `**bold**`, backticks, and numbered lists display as raw characters.
+Follow these rules to keep questions readable:
+
+1.  **Short questions only.** The `question` field must be a single concise
+    sentence (aim for ≤ 15 words). Never put analysis, findings, code
+    references, status reports, or multi-line content in the question.
+2.  **Report first, ask second.** Present any analysis, findings, or context as
+    **regular text in your response** (where markdown renders properly), then
+    call `ask_question` with only the decision question and options.
+3.  **Options are the user's voice.** Each option string should read as
+    something the user would say — not a description of what you will do.
+4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
+    decision has nuance.
+
+### Examples
+
+**BAD — wall of analysis crammed into the question field:**
+
+```
+question: "Task 1.1 Critical Examination: I've analyzed the codebase against
+the spec. Key findings: 1. **onDrop callback** currently only receives blockId
+— we get the full Block from projectBlocks in PrintablePanel, so blockName
+is available. 2. **removeBackgroundForDrop** is a plain async function...
+Shall I proceed with TDD?"
+options: ["Yes", "No"]
+```
+
+**GOOD — analysis as normal text, question is short and has nuanced options:**
+
+First, output your analysis as regular markdown text:
+
+> **Task 1.1 Critical Examination:** I've analyzed the codebase against the
+> spec. Key findings: 1. `onDrop` callback currently only receives `blockId` —
+> we get the full `Block` from `projectBlocks` in `PrintablePanel`, so
+> `blockName` is available from `block.name`. 2. `removeBackgroundForDrop` is a
+> plain async function (not a hook)...
+
+Then call `ask_question` separately:
+
+```
+question: "How should I proceed on Task 1.1?"
+options: [
+  "Proceed — the patterns are clear",
+  "I have concerns — let me clarify first",
+  "Skip this task for now",
+  "Show me the relevant code before deciding"
+]
+```
+
+**More good examples:**
+
+```
+question: "I found 3 gaps in the draft spec. How should I handle them?"
+options: [
+  "Incorporate all suggestions into the spec",
+  "Let me review each suggestion individually",
+  "Acknowledge gaps and proceed anyway",
+  "Discuss the gaps further before deciding"
+]
+```
+
+```
+question: "Phase 2 is complete. Does this meet your expectations?"
+options: [
+  "Looks good — continue to Phase 3",
+  "Mostly good, but I want to tweak something first",
+  "Not quite — let's revisit before moving on",
+  "Show me the verification steps again"
+]
+```
+
+```
+question: "How would you like to handle the completed track?"
+options: [
+  "Run /conductor_review first",
+  "Archive the track",
+  "Delete the track",
+  "Leave it as-is for now"
+]
+```
+
 ## Protocol
 
 ### Step 1: Setup Check

@@ -4,7 +4,7 @@ setlocal EnableDelayedExpansion
 :: Antigravity Conductor Skills & Workflows Installer (Windows)
 :: =============================================================================
 
-set "VERSION=0.2.1"
+set "VERSION=0.2.2"
 set "FLAGS_dry_run=0"
 set "FLAGS_force=0"
 set "FLAGS_uninstall=0"
@@ -53,6 +53,7 @@ set "ALL_TARGET_FILES[5]=%TARGET_SKILLS_ROOT%\conductor_implement\SKILL.md"
 set "ALL_TARGET_FILES[6]=%TARGET_SKILLS_ROOT%\conductor_status\SKILL.md"
 set "ALL_TARGET_FILES[7]=%TARGET_SKILLS_ROOT%\conductor_review\SKILL.md"
 set "ALL_TARGET_FILES[8]=%TARGET_SKILLS_ROOT%\conductor_revert\SKILL.md"
+set "ALL_TARGET_FILES[9]=%TARGET_SKILLS_ROOT%\conductor_chat\SKILL.md"
 
 echo.
 echo   ==================================================
@@ -82,7 +83,7 @@ if "%FLAGS_uninstall%"=="1" goto :do_uninstall
 :: Validate sources
 if not exist "%SOURCE_SKILL_DIR%\SKILL.md" ( echo [ERROR] Missing %SOURCE_SKILL_DIR%\SKILL.md & exit /b 1 )
 if not exist "%SOURCE_TEMPLATE_DIR%\workflow_template.md" ( echo [ERROR] Missing %SOURCE_TEMPLATE_DIR%\workflow_template.md & exit /b 1 )
-for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert) do (
+for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert conductor_chat) do (
     if not exist "%SCRIPT_DIR%\skills\%%S\SKILL.md" ( echo [ERROR] Missing %SCRIPT_DIR%\skills\%%S\SKILL.md & exit /b 1 )
 )
 
@@ -109,7 +110,7 @@ if "%FLAGS_dry_run%"=="1" (
 :: Sub-Skills
 echo.
 echo --- Installing Conductor Command Skills ---
-for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert) do (
+for %%S in (conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert conductor_chat) do (
     call :install_file "%SCRIPT_DIR%\skills\%%S\SKILL.md" "%TARGET_SKILLS_ROOT%\%%S\SKILL.md"
 )
 
@@ -125,7 +126,7 @@ exit /b 0
 :do_uninstall
 echo --- Uninstalling Conductor ---
 set "removed=0"
-for /L %%i in (0,1,8) do (
+for /L %%i in (0,1,9) do (
     if exist "!ALL_TARGET_FILES[%%i]!" (
         if "%FLAGS_dry_run%"=="1" (
             echo Would remove: !ALL_TARGET_FILES[%%i]!

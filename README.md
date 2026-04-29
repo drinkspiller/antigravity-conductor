@@ -44,6 +44,7 @@ File                     | Location                             | Purpose
 `SKILL.md`               | `~/.gemini/antigravity/skills/conductor_status/` | `/conductor_status` — View project progress
 `SKILL.md`               | `~/.gemini/antigravity/skills/conductor_review/` | `/conductor_review` — Review work against spec
 `SKILL.md`               | `~/.gemini/antigravity/skills/conductor_revert/` | `/conductor_revert` — Undo work via VCS-aware revert
+`SKILL.md`               | `~/.gemini/antigravity/skills/conductor_chat/` | `/conductor_chat` — Context-primed freeform agent
 `workflow_template.md`   | `~/.gemini/antigravity/skills/conductor/templates/` | Bundled workflow template copied to projects during `/conductor_setup`
 `.conductor_version`     | `~/.gemini/antigravity/skills/conductor/` | Version stamp for update detection
 
@@ -122,6 +123,10 @@ In Antigravity, typing `/` opens an autocomplete dropdown listing available work
 /conductor_status         # View progress across all tracks
 /conductor_review         # Review completed work against spec
 /conductor_revert         # Undo work from a track, phase, or task
+/conductor_chat           # Ingest conductor knowledge, then go — no tracks or gates.
+                          # Ideal for asking how things work, exploring the codebase
+                          # with full context, or diving into lightweight implementations
+                          # that don't warrant a dedicated track.
 ```
 
 ### Via Natural Language
@@ -142,4 +147,4 @@ appropriate command based on your prompt.
 
 ## Version
 
-Current: **v0.2.1**
+Current: **v0.2.2**
