@@ -11,6 +11,47 @@ description: Get a high-level overview of project progress across all tracks. Us
 skill folder) for full context on directory structure, conventions, and
 lifecycle rules.
 
+## `ask_question` Best Practices
+
+The `ask_question` modal renders text with **limited formatting** — markdown
+syntax like `**bold**`, backticks, and numbered lists display as raw characters.
+Follow these rules to keep questions readable:
+
+1.  **Short questions only.** The `question` field must be a single concise
+    sentence (aim for ≤ 15 words). Never put analysis, findings, code
+    references, status reports, or multi-line content in the question.
+2.  **Report first, ask second.** Present any analysis, findings, or context as
+    **regular text in your response** (where markdown renders properly), then
+    call `ask_question` with only the decision question and options.
+3.  **Options are the user's voice.** Each option string should read as
+    something the user would say — not a description of what you will do.
+4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
+    decision has nuance.
+
+### Examples
+
+**BAD — status summary in the question:**
+
+```
+question: "Project has 3 tracks: 1 complete, 1 in progress (Phase 2, Task 3),
+1 pending. 15/23 tasks done (65%). What would you like to do next?"
+options: ["Implement", "New track", "Review"]
+```
+
+**GOOD — status in the artifact, question is just 'what next':**
+
+First, write the full status to the artifact. Then call `ask_question`:
+
+```
+question: "What would you like to do next?"
+options: [
+  "Continue implementing the current task",
+  "Start a new track",
+  "Review completed work",
+  "Show me more details on a specific track"
+]
+```
+
 ## Protocol
 
 1.  **Determine Project Root:** Use `ask_question` to ask the user to specify

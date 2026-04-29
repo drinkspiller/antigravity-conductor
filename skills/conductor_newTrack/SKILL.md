@@ -12,6 +12,75 @@ phased plan.
 skill folder) for full context on directory structure, conventions, and
 lifecycle rules.
 
+## `ask_question` Best Practices
+
+The `ask_question` modal renders text with **limited formatting** — markdown
+syntax like `**bold**`, backticks, and numbered lists display as raw characters.
+Follow these rules to keep questions readable:
+
+1.  **Short questions only.** The `question` field must be a single concise
+    sentence (aim for ≤ 15 words). Never put analysis, findings, code
+    references, status reports, or multi-line content in the question.
+2.  **Report first, ask second.** Present any analysis, findings, or context as
+    **regular text in your response** (where markdown renders properly), then
+    call `ask_question` with only the decision question and options.
+3.  **Options are the user's voice.** Each option string should read as
+    something the user would say — not a description of what you will do.
+4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
+    decision has nuance.
+
+### Examples
+
+**BAD — findings and context in the question field:**
+
+```
+question: "I identified the following gaps: 1. No error handling for network
+failures. 2. Missing edge case for empty arrays. 3. No accessibility
+considerations. Would you like to incorporate suggestions?"
+options: ["Yes", "No"]
+```
+
+**GOOD — findings as text, question is short with nuanced options:**
+
+First, output findings as regular markdown:
+
+> I identified 3 gaps in the draft spec: 1. No error handling for network
+> failures 2. Missing edge case for empty arrays 3. No accessibility
+> considerations
+
+Then call `ask_question`:
+
+```
+question: "How should I handle these spec gaps?"
+options: [
+  "Incorporate all suggestions into the spec",
+  "Let me review each suggestion individually",
+  "Acknowledge gaps and proceed anyway",
+  "Discuss the gaps further before deciding"
+]
+```
+
+**More good examples:**
+
+```
+question: "Which approach for the data layer?"
+options: [
+  "Extend the existing UserModel with new fields",
+  "Create a separate ProfileModel module",
+  "Use a feature flag to switch between approaches"
+]
+```
+
+```
+question: "I found overlap with the 'dark-mode' track. What should we do?"
+options: [
+  "Adjust scope to avoid overlap",
+  "Acknowledge the dependency and proceed",
+  "Merge both tracks into one",
+  "No action needed"
+]
+```
+
 ## Protocol
 
 1.  **Get Project Root:** Ask the user to specify the project root path

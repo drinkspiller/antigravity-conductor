@@ -52,14 +52,14 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-VERSION="0.2.1"
+VERSION="0.2.2"
 
 # --- Resolve source directory (relative to this script) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_SKILL_DIR="${SCRIPT_DIR}/skills/conductor"
 SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor/templates"
 # Sub-skill names (each has its own directory under skills/)
-SUB_SKILL_NAMES=(conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert)
+SUB_SKILL_NAMES=(conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert conductor_chat)
 
 # --- Color helpers ---
 RED='\033[0;31m'
@@ -342,11 +342,11 @@ echo -e "  ${DIM}Sub-skills:${NC}    ${CYAN}${TARGET_SKILLS_ROOT}/conductor_*/${
 echo -e "  ${DIM}Files:${NC}         ${WHITE}${#ALL_TARGET_FILES[@]}${NC} total"
 echo ""
 
+check_for_updates
+
 if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
   echo -e "  ${YELLOW}🔍 Dry run complete. Re-run without --dry_run to apply changes.${NC}"
 else
   echo -e "  ${GREEN}🚀 Installation complete! You're ready to conduct.${NC}"
 fi
 echo ""
-
-check_for_updates

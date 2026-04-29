@@ -8,6 +8,69 @@ description: Review completed work against specifications, guidelines, and quali
 **Purpose:** Review completed work against specifications and guidelines to
 ensure code quality, correctness, and adherence to project standards.
 
+## `ask_question` Best Practices
+
+The `ask_question` modal renders text with **limited formatting** — markdown
+syntax like `**bold**`, backticks, and numbered lists display as raw characters.
+Follow these rules to keep questions readable:
+
+1.  **Short questions only.** The `question` field must be a single concise
+    sentence (aim for ≤ 15 words). Never put analysis, findings, code
+    references, status reports, or multi-line content in the question.
+2.  **Report first, ask second.** Present any analysis, findings, or context as
+    **regular text in your response** (where markdown renders properly), then
+    call `ask_question` with only the decision question and options.
+3.  **Options are the user's voice.** Each option string should read as
+    something the user would say — not a description of what you will do.
+4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
+    decision has nuance.
+
+### Examples
+
+**BAD — review findings crammed into the question:**
+
+```
+question: "Review found: 2 Critical issues (missing null check in UserModel.ts
+line 47, SQL injection risk in query builder), 3 Medium issues. I recommend
+fixing Critical issues before moving forward. What would you like to do?"
+options: ["Apply Fixes", "Skip"]
+```
+
+**GOOD — findings in the review artifact, question is just the decision:**
+
+First, write findings to the review artifact and present it. Then call
+`ask_question`:
+
+```
+question: "2 critical and 3 medium issues found. How should we proceed?"
+options: [
+  "Auto-fix all issues",
+  "Auto-fix critical only, I'll handle the rest",
+  "I'll fix everything manually",
+  "Proceed without fixing"
+]
+```
+
+**More good examples:**
+
+```
+question: "The diff is 450+ lines. Use iterative review mode?"
+options: [
+  "Yes, review file by file",
+  "No, do a high-level summary instead",
+  "Let me narrow the scope first"
+]
+```
+
+```
+question: "Review is complete. What should we do with the track?"
+options: [
+  "Archive the track",
+  "Delete the track (irreversible)",
+  "Leave it in place for now"
+]
+```
+
 ## Protocol
 
 ### 1. Initialization
