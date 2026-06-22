@@ -1,6 +1,7 @@
 ---
 name: conductor_chat
 description: Load all Conductor project context (product, tech-stack, guidelines, workflow, active tracks) and proceed immediately to the user's task. Use when asked to "use conductor context", "load conductor", "conductor chat", or when the user wants to work with conductor knowledge without creating tracks or running the full ceremony.
+persona: Conductor Guide
 ---
 
 # Conductor Chat — Context-Primed Freeform Agent
@@ -21,6 +22,11 @@ Conductor workflow.
 ## Protocol
 
 ### Step 1: Locate the Conductor Directory
+
+> [!NOTE] Project root resolution is now handled by `conductor_protocol.md` §7.
+> This skill's auto-detection logic served as the reference implementation for
+> that centralized procedure. If protocol §7 has already resolved
+> `{PROJECT_ROOT}`, skip directly to Step 2.
 
 1.  **Auto-detect** the conductor directory using these heuristics (in priority
     order):

@@ -1,6 +1,7 @@
 ---
 name: conductor_setup
 description: Initialize or update a project's Conductor context. Use when asked to set up conductor, initialize project context, create conductor directory, or run /conductor_setup.
+persona: Conductor Architect
 ---
 
 # /conductor_setup — Initialize Project Context
@@ -8,84 +9,9 @@ description: Initialize or update a project's Conductor context. Use when asked 
 **Purpose:** Initialize or update the project's Conductor context (run once per
 project).
 
-**Before executing:** Read the Conductor skill (SKILL.md in the `conductor`
-skill folder) for full context on directory structure, conventions, and
-lifecycle rules.
-
-## `ask_question` Best Practices
-
-The `ask_question` modal renders text with **limited formatting** — markdown
-syntax like `**bold**`, backticks, and numbered lists display as raw characters.
-Follow these rules to keep questions readable:
-
-1.  **Short questions only.** The `question` field must be a single concise
-    sentence (aim for ≤ 15 words). Never put analysis, findings, code
-    references, status reports, or multi-line content in the question.
-2.  **Report first, ask second.** Present any analysis, findings, or context as
-    **regular text in your response** (where markdown renders properly), then
-    call `ask_question` with only the decision question and options.
-3.  **Options are the user's voice.** Each option string should read as
-    something the user would say — not a description of what you will do.
-4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
-    decision has nuance.
-
-### Examples
-
-**BAD — scan results dumped into the question:**
-
-```
-question: "A brownfield project detected. Found package.json with React 18,
-TypeScript 5.3, 47 source files in src/, 12 test files, BUILD files present.
-May I perform a read-only scan of the codebase to extract the tech stack?"
-options: ["Yes", "No"]
-```
-
-**GOOD — scan summary as text, question is short with nuanced options:**
-
-First, output findings as regular markdown:
-
-> **Brownfield project detected.** I found `package.json` with React 18,
-> TypeScript 5.3, 47 source files in `src/`, and BUILD files present.
-
-Then call `ask_question`:
-
-```
-question: "May I perform a read-only codebase scan?"
-options: [
-  "Yes, scan everything",
-  "Yes, but skip test files",
-  "No, I'll describe the stack manually",
-  "Show me what directories you'd scan first"
-]
-```
-
-**More good examples:**
-
-```
-question: "How should I draft product.md?"
-options: [
-  "Interactive — walk me through questions",
-  "Autogenerate from project context",
-  "Start from a template I'll customize"
-]
-```
-
-```
-question: "Here's the draft. What do you think?"
-options: [
-  "Approve — looks good",
-  "Suggest changes — I'll describe them",
-  "Start over with a different approach"
-]
-```
-
 ## Protocol
 
-1.  **Get Project Root:** Ask the user to specify the project root path where
-    the `conductor/` directory should be created or already exists. Use this
-    path as `{PROJECT_ROOT}` for all operations.
-
-2.  **Project Audit (§1.2):**
+1.  **Project Audit (§1.2):**
 
     -   Check if `{PROJECT_ROOT}/conductor/` exists.
     -   If it exists, read `{PROJECT_ROOT}/conductor/setup_state.json` to
@@ -96,11 +22,11 @@ options: [
         `{PROJECT_ROOT}/conductor/setup_state.json` file to track setup
         progress.
 
-3.  **Brownfield / Greenfield Detection (§2.0):**
+2.  **Brownfield / Greenfield Detection (§2.0):**
 
     -   Detect project maturity by checking for existing dependency manifests
         (e.g., `package.json`, `pom.xml`, `requirements.txt`, `go.mod`,
-        `Cargo.toml`) and build files (e.g., `BUILD`, `CMakeLists.txt`).
+        `Cargo.toml`) and `BUILD` files.
     -   Check for common source code directories (e.g., `src/`, `app/`, `lib/`,
         `bin/`).
     -   If indicators are found, this is a **Brownfield** project. Before
@@ -113,7 +39,7 @@ options: [
             lines.
     -   If no indicators are found, this is a **Greenfield** project.
 
-4.  **Artifact Generation Protocol:** For each missing artifact, follow the
+3.  **Artifact Generation Protocol:** For each missing artifact, follow the
     steps below. Generate one artifact at a time.
 
     -   Present structured choices to the user using `ask_question` or write
@@ -220,12 +146,82 @@ approval, write the files and update `setup_state.json`.
 
 --------------------------------------------------------------------------------
 
+### Artifact 8: `terms.md`
+
+Use `ask_question` to present structured options: "Interactive", "Autogenerate",
+or "Skip for now".
+
+-   **Interactive**: Guide the user through 2 key questions: "What are the core
+    domain concepts in this project?" and "Are there any terms your team uses
+    differently from industry convention or standard coding vocabulary?"
+-   **Autogenerate (Brownfield only)**: Perform a read-only scan of the codebase
+    to identify domain-specific nouns (e.g., class names, proto message types,
+    API resource names). Propose a draft glossary with definitions inferred from
+    context.
+-   **Skip for now**: Proceed without creating a glossary. The file can be
+    created lazily during track planning if needed.
+
+Draft the document following the `terms.md` format rules (opinionated
+vocabulary, tight 1-2 sentence definitions, `_Avoid_` lists for synonyms). Enter
+the Draft Review Loop ("Approve" or "Suggest changes"). Upon approval, write it
+to `{PROJECT_ROOT}/conductor/terms.md` and update `setup_state.json`.
+
+--------------------------------------------------------------------------------
+
+### Artifact 9: `invariants.md`
+
+Use `ask_question` to present structured options: "Interactive", "Autogenerate",
+or "Skip for now".
+
+-   **Interactive**: Guide the user through 2 key questions: "Are there ordering
+    constraints or call-sequence rules your team follows?" and "Are there 'never
+    do X' patterns that aren't written down but everyone knows?"
+-   **Autogenerate (Brownfield only)**: Perform a read-only scan of the codebase
+    for guard patterns (`if (!x) throw`, assertions, initialization checks,
+    comments containing "must", "always", "never", "before", "after"). Propose
+    candidate invariants with categories inferred from context.
+-   **Skip for now**: Proceed without creating invariants. The file is created
+    lazily during track work when the first invariant is captured (see
+    `conductor_cdd_protocols.md` §10).
+
+Draft the document following the invariant format rules (category headers,
+`{CAT}-{NNN}` IDs, source attribution, scope annotations). Enter the Draft
+Review Loop ("Approve" or "Suggest changes"). Upon approval, write it to
+`{PROJECT_ROOT}/conductor/invariants.md` and update `setup_state.json`.
+
+--------------------------------------------------------------------------------
+
+### Artifact 10: Per-Directory GEMINI.md Enrichment (Brownfield Only)
+
+This step is only offered for brownfield projects with directories containing
+10+ source files.
+
+1.  Scan the project source tree for directories with 10+ source files.
+2.  For each candidate directory, check whether a `GEMINI.md` file already
+    exists and whether it contains a `## Conductor Context` section.
+3.  Present the candidate directories using `ask_question` with
+    `is_multi_select: true`: "These directories are large enough to benefit from
+    scoped context. Enrich their GEMINI.md files?"
+4.  For each selected directory:
+    -   If `GEMINI.md` does not exist, create it.
+    -   If `GEMINI.md` exists but has no `## Conductor Context` section, append
+        the section.
+    -   Populate the section with: Purpose (inferred from file contents and
+        directory name), Invariants (scoped from `invariants.md` if it exists),
+        Key Types (extracted via AST scan), and Term Overrides (if the directory
+        uses terms differently from `terms.md`).
+    -   Wrap the section in boundary comments:
+        `<!-- Conductor Context: START (manual edits go above this line) -->`
+        and `<!-- Conductor Context: END (manual edits go below this line) -->`.
+5.  Enter the Draft Review Loop ("Approve" or "Suggest changes") for each
+    generated section. Upon approval, update `setup_state.json`.
+
+--------------------------------------------------------------------------------
+
 ### Finalization (§2.7)
 
-1.  **Commit Setup Files**: Commit all generated `conductor/` files to the
-    project's Version Control System (VCS). Detect and adapt to the available
-    VCS (git, Mercurial, etc.). Create a commit or changelist with a clear
-    message like `chore: initialize conductor context`.
+1.  **Commit Setup Files**: Commit all generated `conductor/` files using VCS
+    commands with a clear message like `chore: initialize conductor context`.
 2.  **Summarize Actions**: Display a summary of all actions taken and list all
     created files.
 3.  **Closing**: Present the final message: "✅ Conductor setup complete! Run
