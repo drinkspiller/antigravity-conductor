@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-07-20
+
+### Breaking
+
+-   **Consolidated Grill into `conductor-new-track`**: Deleted
+    `conductor_newTrack_grill` and `conductor_newTrack_discovery`. Grilling is
+    now the default one-question-at-a-time interview protocol inside
+    `conductor-new-track` Step 5.
+-   **Kebab-Case Skill Renaming**: Renamed all sub-skill directories to
+    kebab-case hyphens (`conductor-setup`, `conductor-new-track`,
+    `conductor-implement`, `conductor-status`, `conductor-review`,
+    `conductor-revert`, `conductor-chat`). Added automatic installer cleanup
+    (`migrate_to_v0_11_0`) to remove deprecated underscore folders.
+
+### Changed
+
+-   **Per-Directory Context Protocol**: Updated `conductor-implement` Step 3.3,
+    `conductor_cdd_protocols.md` §11, `conductor-setup` Artifact 10, and
+    `conductor_protocol.md` §0a item 9 to:
+    -   Discover agent context files case-insensitively (`GEMINI.md`,
+        `CLAUDE.md`, `AGENTS.md`, `AGENT.md`). Append to existing files without
+        creating duplicates; prompt user for preferred filename when multiple or
+        zero files exist.
+    -   Use reason-driven creation based on architectural justification
+        (interacting services, stateful controllers, local invariants, domain
+        gotchas) rather than arbitrary file-count thresholds.
+-   **Report First, Ask Second**: Updated `conductor_antigravity.md` and
+    `conductor-implement` Step 5.1 (Retrospective ADR Review) to mandate
+    printing full context, trade-off summaries, and spec quotes in the main chat
+    response before calling `ask_question`.
+
 ## [0.3.0] - 2026-06-22
 
 ### Breaking

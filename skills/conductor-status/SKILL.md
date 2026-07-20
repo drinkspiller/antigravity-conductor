@@ -1,10 +1,10 @@
 ---
-name: conductor_status
-description: Get a high-level overview of project progress across all tracks. Use when asked for project status, track progress, what's done, or run /conductor_status.
+name: conductor-status
+description: Get a high-level overview of project progress across all tracks. Use when asked for project status, track progress, what's done, or run /conductor-status.
 persona: Conductor Observer
 ---
 
-# /conductor_status — View Project Progress
+# /conductor-status — View Project Progress
 
 **Purpose:** Get a high-level overview of project progress.
 
@@ -38,8 +38,8 @@ persona: Conductor Observer
     -   Extract the current phase and task (marked `[~]`), the next pending task
         (marked `[ ]`), and any explicitly noted blockers.
 
-4.  **Generate the Enhanced Status Summary:** Write the status summary as an
-    artifact (`conductor_status.md`, `ArtifactType: walkthrough` using
+4.  **Generate the Enhanced Status Summary:** Write the status summary as a
+    Jetski artifact (`conductor_status.md`, `ArtifactType: walkthrough` using
     `write_to_file` with `IsArtifact: true`) and present via `notify_user` with
     `PathsToReview`.
 

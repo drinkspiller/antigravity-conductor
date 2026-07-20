@@ -90,15 +90,16 @@ At each trigger point, the agent follows this protocol:
     -   Append the invariant entry with ID, statement, source, and scope.
     -   If `invariants.md` does not exist, create it with the standard header.
 
-## 11. Per-Directory GEMINI.md Context
+## 11. Per-Directory Context Protocol
 
-For large projects, per-directory context reduces the context loading tax by
-scoping what the agent reads to what's relevant for the current task.
+For complex project modules, per-directory context reduces the context loading
+tax by scoping what the agent reads to what's relevant for the current task.
 
 ### Section Format
 
-Conductor manages a `## Conductor Context` section inside existing `GEMINI.md`
-files. The section is delimited by boundary comments:
+Conductor manages a `## Conductor Context` section inside existing agent context
+files (`GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, or `AGENT.md`). The section is
+delimited by boundary comments:
 
 ```markdown
 <!-- Conductor Context: START (manual edits go above this line) -->
@@ -118,23 +119,38 @@ files. The section is delimited by boundary comments:
 <!-- Conductor Context: END (manual edits go below this line) -->
 ```
 
-### Creation
+### Multi-File Discovery & Creation
 
--   During `/conductor_setup` (brownfield): for directories with 10+ source
-    files, propose creating or enriching `GEMINI.md` with the section.
--   During `/conductor_implement`: when the agent opens a directory for the
-    first time in a track and no `## Conductor Context` section exists, offer to
-    create one if the directory has 5+ source files.
+Before modifying files in a directory for the first time in a track, check
+case-insensitively for existing agent context files: `GEMINI.md`, `CLAUDE.md`,
+`AGENTS.md`, or `AGENT.md`.
+
+-   **Discovery**: If any of these files exist and contain a `## Conductor
+    Context` section, use that file and do NOT prompt to create a new one.
+-   **Appending**: If exactly one of those files exists but lacks a `##
+    Conductor Context` section, append the section to that existing file rather
+    than creating a second context file.
+-   **Creation & Architectural Justification**: Do NOT automatically prompt to
+    create a context file based on arbitrary file counts. Only prompt if there
+    is a concrete architectural justification (multiple interacting services,
+    complex stateful controllers, subtle local invariants, or domain gotchas).
+    If multiple files exist without a context section or if creating a new file
+    from scratch, prompt the user via `ask_question` to select their preferred
+    filename (`GEMINI.md`, `AGENTS.md`, `AGENT.md`, `CLAUDE.md`).
+-   **Simple Directories**: If the directory is simple (straightforward UI
+    components, simple utilities, or basic CRUD wrappers), skip prompting
+    entirely.
 
 ### Loading
 
 See context loading item 9 in `conductor_protocol.md` §0a. The agent reads the
-nearest `GEMINI.md` with a `## Conductor Context` section in the parent
-directory chain of each file the current task touches. Innermost directory wins.
+nearest context file (`GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, or `AGENT.md`)
+containing a `## Conductor Context` section in the parent directory chain of
+each file the current task touches. Innermost directory wins.
 
 ### Updates
 
 At phase checkpoints, if the agent added new exports or discovered new
-invariants in a directory, propose appending them to the directory's `GEMINI.md`
-`## Conductor Context` section. Only modify content between the START and END
-boundary comments.
+invariants in a directory, propose appending them to the directory's context
+file `## Conductor Context` section. Only modify content between the START and
+END boundary comments.

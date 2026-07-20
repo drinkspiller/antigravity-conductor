@@ -1,10 +1,10 @@
 ---
-name: conductor_revert
-description: Undo work from a track, phase, or task using VCS-aware revert. Use when asked to revert a track, undo changes, roll back work, or run /conductor_revert.
+name: conductor-revert
+description: Undo work from a track, phase, or task using VCS-aware revert. Use when asked to revert a track, undo changes, roll back work, or run /conductor-revert.
 persona: Conductor Surgeon
 ---
 
-# /conductor_revert — Undo Work
+# /conductor-revert — Undo Work
 
 **Purpose:** Undo work from a track, phase, or task using VCS-aware revert.
 
@@ -63,9 +63,9 @@ Once the target is selected, gather the commits to revert from VCS history.
 
 ### 4. Final Execution Plan
 
-Before executing the revert, present a plan to the user using an artifact.
+Before executing the revert, present a plan to the user using a Jetski artifact.
 
-1.  **Preview the Revert:** Write a revert preview as an artifact (using
+1.  **Preview the Revert:** Write a revert preview as a Jetski artifact (using
     `write_to_file` with `IsArtifact: true`, `ArtifactType: other`). Save it to
     a logical artifact path (e.g.,
     `{PROJECT_ROOT}/conductor/artifacts/revert_preview.md`). The artifact should

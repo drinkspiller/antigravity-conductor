@@ -1,10 +1,10 @@
 ---
-name: conductor_setup
-description: Initialize or update a project's Conductor context. Use when asked to set up conductor, initialize project context, create conductor directory, or run /conductor_setup.
+name: conductor-setup
+description: Initialize or update a project's Conductor context. Use when asked to set up conductor, initialize project context, create conductor directory, or run /conductor-setup.
 persona: Conductor Architect
 ---
 
-# /conductor_setup — Initialize Project Context
+# /conductor-setup — Initialize Project Context
 
 **Purpose:** Initialize or update the project's Conductor context (run once per
 project).
@@ -26,7 +26,7 @@ project).
 
     -   Detect project maturity by checking for existing dependency manifests
         (e.g., `package.json`, `pom.xml`, `requirements.txt`, `go.mod`,
-        `Cargo.toml`) and `BUILD` files.
+        `Cargo.toml`) and Bazel `BUILD` files.
     -   Check for common source code directories (e.g., `src/`, `app/`, `lib/`,
         `bin/`).
     -   If indicators are found, this is a **Brownfield** project. Before
@@ -43,7 +43,7 @@ project).
     steps below. Generate one artifact at a time.
 
     -   Present structured choices to the user using `ask_question` or write
-        clarifying questions as an artifact (`write_to_file` with
+        clarifying questions as a Jetski artifact (`write_to_file` with
         `IsArtifact: true` and `ArtifactType: other`).
     -   **Draft Review Loop**: After drafting an artifact, present it for review
         using `ask_question` with options: "Approve" or "Suggest changes". Loop
@@ -191,25 +191,19 @@ Review Loop ("Approve" or "Suggest changes"). Upon approval, write it to
 
 --------------------------------------------------------------------------------
 
-### Artifact 10: Per-Directory GEMINI.md Enrichment (Brownfield Only)
+### Artifact 10: Per-Directory Context Enrichment (Brownfield Only)
 
-This step is only offered for brownfield projects with directories containing
-10+ source files.
+This step is offered for brownfield project directories with concrete architectural justification (e.g., multiple interacting services, complex stateful controllers, subtle local invariants, or domain gotchas). Simple directories (straightforward UI components, basic utilities, CRUD wrappers) are skipped.
 
-1.  Scan the project source tree for directories with 10+ source files.
-2.  For each candidate directory, check whether a `GEMINI.md` file already
-    exists and whether it contains a `## Conductor Context` section.
-3.  Present the candidate directories using `ask_question` with
-    `is_multi_select: true`: "These directories are large enough to benefit from
-    scoped context. Enrich their GEMINI.md files?"
+1.  Scan the project source tree for complex directories with architectural justification.
+2.  For each candidate directory, check case-insensitively for existing agent context files: `GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, or `AGENT.md`.
+    -   If any of these files exist and contain a `## Conductor Context` section, use that file and do NOT prompt.
+    -   If exactly one exists without `## Conductor Context`, append the section to that file.
+    -   If multiple exist or none exist, present an `ask_question` prompt asking the user which filename (`GEMINI.md`, `AGENTS.md`, `AGENT.md`, `CLAUDE.md`) they prefer for that directory.
+3.  Present candidate directories using `ask_question` with `is_multi_select: true`: "These directories have complex architecture or local invariants. Enrich their context files?"
 4.  For each selected directory:
-    -   If `GEMINI.md` does not exist, create it.
-    -   If `GEMINI.md` exists but has no `## Conductor Context` section, append
-        the section.
-    -   Populate the section with: Purpose (inferred from file contents and
-        directory name), Invariants (scoped from `invariants.md` if it exists),
-        Key Types (extracted via AST scan), and Term Overrides (if the directory
-        uses terms differently from `terms.md`).
+    -   Create or update the chosen context file with the `## Conductor Context` section.
+    -   Populate the section with: Purpose (inferred from file contents and directory name), Invariants (scoped from `invariants.md` if it exists), Key Types (extracted via AST scan), and Term Overrides (if the directory uses terms differently from `terms.md`).
     -   Wrap the section in boundary comments:
         `<!-- Conductor Context: START (manual edits go above this line) -->`
         and `<!-- Conductor Context: END (manual edits go below this line) -->`.
@@ -225,4 +219,5 @@ This step is only offered for brownfield projects with directories containing
 2.  **Summarize Actions**: Display a summary of all actions taken and list all
     created files.
 3.  **Closing**: Present the final message: "✅ Conductor setup complete! Run
-    `/conductor_newTrack` to start your first feature or bug fix track."
+    `/conductor_newTrack` to start your first feature or bug fix track." x
+    track."

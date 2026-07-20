@@ -1,4 +1,4 @@
-# {Short title of the decision}
+\# {Short title of the decision}
 
 {1-3 sentences: what's the context, what was decided, and why.}
 

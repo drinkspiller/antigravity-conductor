@@ -12,7 +12,7 @@ task-specific logic.
 ## 0. Conductor Directory
 
 The conductor directory lives at `{PROJECT_ROOT}/conductor/` — the root of the
-user's project repository (NOT the agent brain/artifacts directory). All
+user's project repository (NOT the Jetski brain/artifacts directory). All
 conductor artifacts are project-level files committed to version control.
 
 ```
@@ -53,16 +53,16 @@ these files (in order of priority):
 7.  `conductor/tracks.md` — Current track registry
 8.  `conductor/adr/*.md` — Active architecture decision records
 9.  **Per-directory context:** For each source file the current task will touch,
-    check the parent directory chain for `GEMINI.md` files containing a
-    `## Conductor Context` section. Load the nearest one (innermost directory
-    wins).
+    check the parent directory chain case-insensitively for context files
+    (`GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, or `AGENT.md`) containing a `##
+    Conductor Context` section. Load the nearest one (innermost directory wins).
 10. **Drift scan:** Run a VCS diff stat against the last checkpoint commit.
     Cross-reference changed files against ADR scopes and invariant scopes. Flag
     contradictions before proceeding (see `conductor_cdd_protocols.md` §9).
 
 Platform-specific behavior (VCS commands, path conventions) is injected by
-platform-specific adapter rules. Do not hardcode VCS commands in skill
-protocols.
+always-on platform rules. Do not hardcode VCS
+commands in skill protocols.
 
 ## 1. Core Operational Guardrails
 
@@ -98,7 +98,7 @@ protocols.
 Whenever a Conductor command produces structured output requiring user review -
 clarifying questions, reports, summaries, specs, plans, or confirmation prompts:
 
-1.  **Write as an artifact** using `write_to_file` with `IsArtifact: true`
+1.  **Write as a Jetski artifact** using `write_to_file` with `IsArtifact: true`
 2.  **Present via `notify_user`** with `PathsToReview` pointing to the file
 3.  **Use appropriate ArtifactType**: `walkthrough` for reports/status,
     `implementation_plan` for specs/plans, `other` for questions/prompts
@@ -110,8 +110,8 @@ Artifact filenames follow: `conductor_<command>_<context>.md`
 ## 4. VCS Operations
 
 Conductor skills are VCS-agnostic by default. Platform-specific VCS behavior
-(Git, Mercurial) is injected by platform adapter rules. When no platform rule
-overrides VCS behavior, default to Git:
+(Git, Mercurial) is injected by platform rules. When no platform rule overrides VCS behavior, default
+to Git:
 
 -   `git status` to check for changes
 -   `git add` / `git commit` for commits

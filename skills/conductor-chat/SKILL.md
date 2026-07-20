@@ -1,5 +1,5 @@
 ---
-name: conductor_chat
+name: conductor-chat
 description: Load all Conductor project context (product, tech-stack, guidelines, workflow, active tracks) and proceed immediately to the user's task. Use when asked to "use conductor context", "load conductor", "conductor chat", or when the user wants to work with conductor knowledge without creating tracks or running the full ceremony.
 persona: Conductor Guide
 ---
@@ -17,7 +17,7 @@ Conductor workflow.
     coding task, research question, or design decision.
 -   The user wants to "just go" with conductor context without the ceremony of
     creating tracks, specs, or plans.
--   The user invokes `/conductor_chat` or asks to "load conductor context."
+-   The user invokes `/conductor-chat` or asks to "load conductor context."
 
 ## Protocol
 
@@ -122,7 +122,7 @@ After context is loaded, determine the next action:
 
 ### No Ceremony
 
--   Do NOT create artifacts for the loading process.
+-   Do NOT create Jetski artifacts for the loading process.
 -   Do NOT ask structured choice questions after loading (no `ask_question`
     calls for approval gates, mode selection, or confirmation).
 -   Do NOT create new tracks, specs, or plans.

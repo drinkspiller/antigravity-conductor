@@ -1,10 +1,10 @@
 ---
-name: conductor_implement
-description: Execute the plan for the current active track, working through tasks sequentially with TDD lifecycle and phase checkpointing. Use when asked to implement, execute the plan, work on the next task, or run /conductor_implement.
+name: conductor-implement
+description: Execute the plan for the current active track, working through tasks sequentially with TDD lifecycle and phase checkpointing. Use when asked to implement, execute the plan, work on the next task, or run /conductor-implement.
 persona: Conductor Implementer
 ---
 
-# /conductor_implement — Execute the Plan
+# /conductor-implement — Execute the Plan
 
 **Purpose:** Execute the plan for the current active track, working through
 tasks sequentially, synchronizing documentation, and managing track cleanup.
@@ -47,10 +47,11 @@ tasks sequentially, synchronizing documentation, and managing track cleanup.
     -   `{PROJECT_ROOT}/conductor/workflow.md`
 3.  Execute tasks sequentially as defined in `plan.md`. For each uncompleted
     task (`[ ]`):
-    -   **Per-Directory Context**: Before modifying files in a directory for the
-        first time in this track, check for a `GEMINI.md` with a `## Conductor
-        Context` section. If absent and the directory has 5+ source files, offer
-        to create one (see `conductor_cdd_protocols.md` §11).
+    -   **Per-Directory Context**: Before modifying files in a directory for the first time in this track, check case-insensitively for existing agent context files: `GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, or `AGENT.md`.
+        -   If any of these files exist and contain a `## Conductor Context` section, use that file without prompting.
+        -   If exactly one exists without `## Conductor Context`, append the section to that file.
+        -   If multiple exist or none exist, and there is concrete architectural justification (multiple interacting services, complex stateful controllers, subtle local invariants, domain gotchas), prompt via `ask_question` asking the user which filename (`GEMINI.md`, `AGENTS.md`, `AGENT.md`, `CLAUDE.md`) they prefer.
+        -   If the directory is simple (straightforward UI components, basic utilities, CRUD wrappers), skip prompting entirely.
     -   **Lifecycle Execution**: Defer to the lifecycle defined in `workflow.md`
         (e.g., TDD Red/Green/Refactor).
     -   **Invariant Capture**: When writing a guard, assertion, initialization
@@ -71,11 +72,8 @@ tasks sequentially, synchronizing documentation, and managing track cleanup.
         true`: "These new exports appeared in Phase N. Add any to the glossary?"
         For each accepted symbol, append a definition to
         `{PROJECT_ROOT}/conductor/terms.md`. Update the cache file.
-    -   **Per-Directory GEMINI.md Update**: For directories touched in this
-        phase, check whether their `GEMINI.md` `## Conductor Context` section
-        needs updates (new Key Types, new scoped invariants). Propose updates
-        between the START and END boundary comments.
-    -   Write a manual verification plan as an artifact (use
+    -   **Per-Directory Context Update**: For directories touched in this phase, check whether their context file (`GEMINI.md`, `AGENTS.md`, `AGENT.md`, or `CLAUDE.md`) `## Conductor Context` section needs updates (new Key Types, new scoped invariants). Propose updates between the START and END boundary comments.
+    -   Write a manual verification plan as a Jetski artifact (use
         `write_to_file` with `IsArtifact: true`, save to
         `{ARTIFACT_DIR}/conductor_implement_phase_N_verification.md`,
         `ArtifactType: walkthrough`). Detail specific, actionable steps (e.g.,
@@ -133,8 +131,8 @@ Synchronization has been handled.
     completed track's `spec.md` under the "## Design Decisions" section.
     Identify any decisions that were recorded in the spec but were *not* written
     as standalone ADR files.
-    -   Present these decisions to the user using the `ask_question` tool with
-        `is_multi_select: true`.
+    -   **Print Candidates First**: Output all candidate decisions as a formatted markdown section in your chat response FIRST, detailing the decision title, trade-off rationale, and relevant spec quotes so the user has full context.
+    -   Then present these decisions using the `ask_question` tool with `is_multi_select: true`.
     -   Randomly select one of these three phrasings for the question:
         *   "Some decisions from this track weren't captured as ADRs. Looking
             back, should any of these be recorded?"

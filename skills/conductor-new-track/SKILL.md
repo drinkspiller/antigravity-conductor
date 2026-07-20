@@ -1,10 +1,10 @@
 ---
-name: conductor_newTrack
-description: Start a new feature or bug fix track with a specification and phased plan. Use when asked to create a new track, start a feature, plan a bug fix, or run /conductor_newTrack.
+name: conductor-new-track
+description: Start a new feature or bug fix track with a specification and phased plan. Use when asked to create a new track, start a feature, plan a bug fix, or run /conductor-new-track.
 persona: Conductor Planner
 ---
 
-# /conductor_newTrack — Create a New Track
+# /conductor-new-track — Create a New Track
 
 **Purpose:** Start a new feature or bug fix track with a specification and
 phased plan.
@@ -17,7 +17,7 @@ phased plan.
     -   `{PROJECT_ROOT}/conductor/tech-stack.md`
     -   `{PROJECT_ROOT}/conductor/workflow.md` If ANY of these files are
         missing, halt immediately with the message: "Please run
-        `/conductor_setup` first to initialize Conductor for this project."
+        `/conductor-setup` first to initialize Conductor for this project."
 
 2.  **Get Description & Infer Type:**
 
@@ -52,93 +52,24 @@ phased plan.
     -   Use findings to inform the spec questions in the next step — questions
         should reference specific codebase context, not be generic.
 
-5.  **Interactive Spec Generation (Mode Selection):**
+5.  **Interactive Spec & Design Elicitation (Grill Protocol):**
 
-    Detect the questioning mode from the user's prompt:
+    Conduct a rigorous, one-question-at-a-time interview with the user to build a deep shared understanding before drafting the spec and plan.
 
-    -   **Grill mode** — if the prompt contains "grill", "grill-me", or "grill
-        me" (case-insensitive): Read the `conductor_newTrack_grill` skill
-        (`conductor_newTrack_grill/SKILL.md`) and follow its protocol. The grill
-        session replaces this step entirely. When the grill session ends,
-        proceed to Step 6.
-    -   **Discovery mode** — if the prompt contains `[experimental-discovery]`:
-        Read the `conductor_newTrack_discovery` skill
-        (`conductor_newTrack_discovery/SKILL.md`) and follow its protocol. When
-        the discovery session ends, proceed to Step 6.
-    -   **Default mode** — if neither keyword is present:
-        -   Ask clarifying questions using structured choices.
-        -   For Features, ask 3-5 questions (e.g., UI/UX, Edge cases, Scope).
-        -   For Bugs/Chores, ask 2-3 questions (e.g., Reproduction, Expected
-            behavior).
-        -   Batch up to 4 questions in a single interaction when possible.
-        -   Present the questions using the `ask_question` tool when multiple
-            choices are applicable. Define the `question` string, `options`
-            (array of strings), and `is_multi_select` (boolean).
-        -   Note that `ask_question` only supports multiple-choice options. If a
-            question requires free-text input where predefined choices do not
-            make sense, ask it as a standard text message instead of using the
-            tool.
-        -   Wait for the user's answers.
-
-6.  **Design Decision Elicitation:**
-
-    -   After gathering initial answers, analyze the feature description against
-        the codebase scan results.
-    -   Identify 2-4 key architectural/design decisions (e.g., "extend existing
-        X vs new module", "feature flag vs always-on", "client-side vs
-        server-side").
-    -   Present each decision using the `ask_question` tool, listing the options
-        (you can include pros/cons in the option descriptions).
-    -   Wait for the user to make their selections.
-    -   **ADR Gating Loop**: For each decision the user resolves:
-        -   Evaluate the 3-part gate:
-            1.  **Hard to reverse** — the cost of changing this mind later is
-                meaningful.
-            2.  **Surprising without context** — a future reader would look at
-                the code and wonder "why on earth did they do it this way?"
-            3.  **Real trade-off** — there were genuine alternatives and you
-                picked one for specific reasons.
-        -   If all three criteria are met, the decision qualifies for an ADR.
-            Present an `ask_question` prompt. Randomly select one of these four
-            phrasings for the question:
-            *   "This decision looks worth recording. Create an ADR?"
-            *   "Hard to reverse, non-obvious, real trade-off — this one
-                qualifies for an ADR. Record it?"
-            *   "ADR candidate detected. Want to capture the rationale?"
-            *   "Worth preserving? An ADR would help future-you understand why."
-            *   *Options*: `["Yes", "No", "Skip all ADR prompts for this
-                track"]`
-        -   If the user selects "Yes":
-            -   Scan the `{PROJECT_ROOT}/conductor/adr/` directory for the
-                highest existing `NNNN` sequence number and increment it by one
-                (default to `0001` if empty).
-            -   Generate the ADR file at
-                `{PROJECT_ROOT}/conductor/adr/NNNN-slug.md` (e.g.,
-                `0001-use-postgres.md`) using the
-                `{PROJECT_ROOT}/conductor/templates/adr_template.md` structure.
-                Proactively fill the Context, Decision, and any relevant
-                Considered Options or Consequences. Write this immediately using
-                `write_to_file`.
-        -   If the user selects "Skip all ADR prompts for this track", bypass
-            the gating check for all remaining decisions in this session.
-    -   **Glossary Elicitation**: If a decision introduces or refines a
-        project-specific domain term that isn't in `terms.md`, offer to add it.
-        Present an `ask_question` prompt. Randomly select one of these three
-        phrasings:
-        *   "A new domain term emerged: '{term}'. Add it to terms.md?"
-        *   "'{term}' isn't in the project glossary yet. Pin it down?"
-        *   "New vocab: '{term}'. Worth defining for consistency?"
-        *   *Options*: `["Yes, with definition", "Yes, I'll write the
-            definition", "No"]`
-        *   If approved, update `{PROJECT_ROOT}/conductor/terms.md` following
-            the glossary formatting rules.
-    -   **Invariant Elicitation**: If a decision implies a behavioral constraint
-        (ordering requirement, initialization guard, data-flow rule, call-
-        sequence dependency), offer to capture it as an invariant. Follow the
-        Invariant Capture Protocol defined in `conductor_cdd_protocols.md` §10.
-    -   Record all decisions in the track spec under the "## Design Decisions"
-        section. If a decision was recorded as an ADR, include a summary and a
-        relative link to the ADR file.
+    -   **Domain Loading**: Silently load context by reading `{PROJECT_ROOT}/conductor/product.md` (for glossary/product context), `{PROJECT_ROOT}/conductor/tech-stack.md` (for technical constraints), and scanning existing `*/spec.md` files.
+    -   **Questioning Strategy**: Interview the user one question at a time across all spec sections (Problem Statement, Functional Requirements, Non-Functional Requirements, Scope Boundaries, Acceptance Criteria).
+        -   Use `ask_question` with your recommended answer listed first (`(Recommended)`) alongside 2–4 other plausible options.
+        -   If a question can be answered by exploring the codebase, explore the codebase instead of asking.
+        -   Follow branches where complexity, ambiguity, or trade-offs emerge.
+    -   **Domain Enforcement**: Actively challenge glossary conflicts against `product.md`, sharpen fuzzy language (`go/avoid-we`), and cross-reference stated behavior against the codebase.
+    -   **Inline Design Decision & ADR Elicitation**: As architectural trade-offs emerge during questioning:
+        -   Evaluate the 3-part gate: (1) Hard to reverse, (2) Surprising without context, (3) Real trade-off.
+        -   If all three criteria are met, immediately prompt using `ask_question`: "This decision looks worth recording. Create an ADR?" (`["Yes", "No", "Skip all ADR prompts for this track"]`).
+        -   If approved, scan `{PROJECT_ROOT}/conductor/adr/` for the next sequence number (`NNNN`) and write `{PROJECT_ROOT}/conductor/adr/NNNN-slug.md` using `adr_template.md`.
+    -   **Inline Glossary Elicitation (`terms.md`)**: If a question or decision introduces/refines a domain term not in `terms.md`, offer to add it inline via `ask_question` (`["Yes, with definition", "Yes, I'll write the definition", "No"]`).
+    -   **Inline Invariant Elicitation**: If a decision implies a behavioral constraint (ordering requirement, initialization guard, call-sequence dependency), offer to capture it following the Invariant Capture Protocol in `conductor_cdd_protocols.md` §10.
+    -   **Termination**: End the grill session when the user signals done ("done", "let's move on") or when natural convergence is reached and you propose ending via `ask_question`: "I think we've covered the key areas. Ready to draft the spec?" (`["Yes, draft the spec", "Not yet — I want to discuss [topic]"]`).
+    -   All resolved decisions must be recorded in the track spec under `## Design Decisions`.
 
 7.  **Draft Specification:**
 
@@ -279,4 +210,4 @@ phased plan.
         '<description>'`
 
 15. **Confirm Completion:** Display: "✅ Track `<track_id>` created! Run
-    `/conductor_implement` to start working through the plan."
+    `/conductor-implement` to start working through the plan."

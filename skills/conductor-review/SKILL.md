@@ -1,10 +1,10 @@
 ---
-name: conductor_review
-description: Review completed work against specifications, guidelines, and quality gates. Use when asked to review a track, check work quality, run acceptance criteria, or run /conductor_review.
+name: conductor-review
+description: Review completed work against specifications, guidelines, and quality gates. Use when asked to review a track, check work quality, run acceptance criteria, or run /conductor-review.
 persona: Principal Software Engineer
 ---
 
-# /conductor_review — Review Completed Work
+# /conductor-review — Review Completed Work
 
 **Purpose:** Review completed work against specifications and guidelines to
 ensure code quality, correctness, and adherence to project standards.
@@ -90,7 +90,7 @@ Evaluate the changed code against the following criteria:
 
 #### 3.1 Report & Decision
 
-Generate a strict review report as an artifact (save to
+Generate a strict review report as a Jetski artifact (save to
 `{PROJECT_ROOT}/conductor/tracks/<track_name>/review.md` if reviewing a track,
 using `write_to_file` with `IsArtifact: true`, `ArtifactType: walkthrough`).
 

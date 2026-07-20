@@ -10,7 +10,7 @@ Whenever ANY Conductor skill is executed against an existing project:
     (contains source code or existing Conductor docs):
     -   Temporarily pause the invoked skill's primary protocol.
     -   Sweep existing documentation (`tech-stack.md`, `product.md`, legacy
-        track `spec.md`, `README.md`) for architectural trade-offs.
+        track `spec.md`, `README.md`, `docs/`) for architectural trade-offs.
     -   Filter extracted statements through the 3-part gate (hard to reverse ×
         surprising × real trade-off).
     -   If qualifying candidates are identified, interview the user via
