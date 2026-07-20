@@ -1,12 +1,11 @@
 ---
-trigger: always_on
-description: Conductor Antigravity UX adapter - maps interaction requirements onto Antigravity native rendering
+trigger: model_decision
+description: Standard visual rules for rendering interactive GUI dialog modals (ask_question) and sequential question loops whenever any Conductor skill or workflow is active.
 ---
 
 # Conductor Antigravity UX Adapter (View Layer)
 
-This platform rule informs the agent how to optimally map universal Conductor
-interaction requirements onto Antigravity's native visual rendering capabilities.
+These operational standards govern the user interface and conversational experience when Conductor skills are executed inside the Antigravity or Jetski host environments.
 
 ## Interactive Interview Rendering
 
@@ -23,9 +22,12 @@ syntax displays as raw characters. Follow these rules:
 1.  **Short questions only.** The `question` field must be a single concise
     sentence (15 words or fewer). Never put analysis, findings, code references,
     or multi-line content in the question.
-2.  **Report first, ask second.** Present analysis/findings as regular text in
-    your response (where markdown renders properly), then call `ask_question`
-    with only the decision question.
+2.  **Report first, ask second.** ALWAYS print your full analysis, findings,
+    candidate item lists, context, and code/spec quotes as regular markdown text
+    in your chat response FIRST before calling `ask_question`. Never ask the
+    user to evaluate or choose from items that were only described in your
+    internal thinking (`thought`) or summarized inside option labels. The modal
+    prompt must only ask the decision question.
 3.  **Options are the user's voice.** Each option reads as something the user
     would say.
 4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No.
@@ -37,7 +39,7 @@ syntax displays as raw characters. Follow these rules:
 
 ```
 question: "A brownfield project detected. Found package.json with React 18,
-TypeScript 5.3, 47 source files in src/, 12 test files, BUILD files present.
+TypeScript 5.3, 47 source files in src/, 12 test files, build files present.
 May I perform a read-only scan of the codebase to extract the tech stack?"
 options: ["Yes", "No"]
 ```
@@ -47,7 +49,7 @@ options: ["Yes", "No"]
 First, output findings as regular markdown:
 
 > **Brownfield project detected.** I found `package.json` with React 18,
-> TypeScript 5.3, 47 source files in `src/`, and BUILD files present.
+> TypeScript 5.3, 47 source files in `src/`, and build files present.
 
 Then call `ask_question`:
 
@@ -93,5 +95,5 @@ When creating conductor artifacts (spec.md, plan.md, etc.):
 
 1.  Write the **canonical version** to `{PROJECT_ROOT}/conductor/` (committed to
     VCS)
-2.  Create a **symlink** in the agent artifact directory pointing to the
+2.  Create a **symlink** in the host artifact directory pointing to the
     canonical file for interactive review

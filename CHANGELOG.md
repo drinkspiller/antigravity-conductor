@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-07-20
+
+### Added
+
+-   **Agent Plugin Manifests**: Root `plugin.json` (v0.11.1) and `.claude-plugin/marketplace.json` for agent plugin auto-discovery across `agy` (Antigravity CLI), Claude Code, and Jetski.
+
+### Changed
+
+-   **Co-located Setup Assets**: Relocated setup templates into `skills/conductor-setup/assets/` to make skill subdirectories completely self-contained.
+-   **Enhanced Modal Rules**: Updated `rules/conductor_antigravity.md` with enhanced `ask_question` modal rendering guardrails and report-first interaction standards.
+-   **Installer & Docs**: Updated `install.sh`, `install.bat`, and `README.md` to support `assets/` and dual plugin manifests.
+
 ## [0.11.0] - 2026-07-20
 
 ### Breaking

@@ -53,11 +53,11 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-VERSION="0.11.0"
+VERSION="0.11.1"
 
 # --- Resolve source directory (relative to this script) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor-setup/templates"
+SOURCE_ASSETS_DIR="${SCRIPT_DIR}/skills/conductor-setup/assets"
 # Sub-skill names (each has its own directory under skills/)
 SUB_SKILL_NAMES=(conductor-setup conductor-new-track conductor-implement conductor-status conductor-review conductor-revert conductor-chat)
 # Rules files (always-on rule files for MVC architecture)
@@ -96,8 +96,8 @@ section() { echo -e "\n${BLUE}━━━${NC} ${BOLD}$*${NC} ${BLUE}━━━━�
 # --- Validate source files exist ---
 validate_sources() {
   local missing=0
-  if [[ ! -f "${SOURCE_TEMPLATE_DIR}/workflow_template.md" ]]; then
-    msg_error "Source not found: ${SOURCE_TEMPLATE_DIR}/workflow_template.md"
+  if [[ ! -f "${SOURCE_ASSETS_DIR}/workflow_template.md" ]]; then
+    msg_error "Source not found: ${SOURCE_ASSETS_DIR}/workflow_template.md"
     ((missing++))
   fi
   for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
@@ -131,13 +131,16 @@ fi
 INSTALL_TARGET="antigravity"
 TARGET_SKILLS_ROOT="${USER_HOME}/.gemini/antigravity/skills"
 TARGET_RULES_ROOT="${USER_HOME}/.gemini/antigravity/rules"
-TARGET_TEMPLATE_DIR="${TARGET_SKILLS_ROOT}/conductor-setup/templates"
+TARGET_ASSETS_DIR="${TARGET_SKILLS_ROOT}/conductor-setup/assets"
+TARGET_MANIFEST_ROOT="${USER_HOME}/.gemini/antigravity"
 
 build_target_list() {
   ALL_TARGET_FILES=(
-    "${TARGET_TEMPLATE_DIR}/workflow_template.md"
-    "${TARGET_TEMPLATE_DIR}/adr_template.md"
+    "${TARGET_ASSETS_DIR}/workflow_template.md"
+    "${TARGET_ASSETS_DIR}/adr_template.md"
     "${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
+    "${TARGET_MANIFEST_ROOT}/plugin.json"
+    "${TARGET_MANIFEST_ROOT}/.claude-plugin/marketplace.json"
   )
   for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
     ALL_TARGET_FILES+=("${TARGET_SKILLS_ROOT}/${sub_skill}/SKILL.md")
@@ -202,14 +205,13 @@ migrate_to_v0_11_0() {
     "conductor_review"
     "conductor_revert"
     "conductor_chat"
-    "conductor"
   )
 
   local deprecated_found=()
-  for old_skill in "${old_skills[@]}"; do
-    local old_dir="${TARGET_SKILLS_ROOT}/${old_skill}"
-    if [[ -d "$old_dir" ]]; then
-      deprecated_found+=("$old_dir")
+  for old in "${old_skills[@]}"; do
+    local old_path="${TARGET_SKILLS_ROOT}/${old}"
+    if [[ -d "$old_path" ]]; then
+      deprecated_found+=("$old_path")
     fi
   done
 
@@ -217,14 +219,7 @@ migrate_to_v0_11_0() {
     return 0
   fi
 
-  section "🔄 Skill Renaming & Cleanup (v0.11.0)"
-  echo ""
-  msg_warn "Found ${#deprecated_found[@]} deprecated/underscore skill directory(ies):"
-  for d in "${deprecated_found[@]}"; do
-    echo -e "     ${DIM}${d}${NC}"
-  done
-  echo ""
-
+  msg_info "Found ${#deprecated_found[@]} deprecated skill directory(ies) from pre-v0.11.0."
   if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
     for d in "${deprecated_found[@]}"; do
       msg_info "${YELLOW}[dry-run]${NC} Would remove deprecated skill directory: ${CYAN}${d}${NC}"
@@ -240,19 +235,22 @@ migrate_to_v0_11_0() {
 
 # --- Version check ---
 check_for_updates() {
-  local latest_version="${VERSION}"
   local version_file="${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
+  local skill_file="${TARGET_SKILLS_ROOT}/conductor-setup/SKILL.md"
 
   if [[ -f "$version_file" ]]; then
     local installed_version
     installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
-    if [[ "$installed_version" == "$latest_version" ]]; then
-      msg_success "${WHITE}antigravity${NC}: Up to date (${WHITE}v${installed_version}${NC})"
+    if [[ "$installed_version" == "$VERSION" ]]; then
+      msg_success "Installed version: ${WHITE}v${installed_version}${NC} (up to date)"
     else
-      echo -e "  ${YELLOW}🆕${NC}  ${WHITE}antigravity${NC}: Update available — ${DIM}v${installed_version}${NC} → ${GREEN}v${latest_version}${NC}"
+      echo -e "  ${YELLOW}🆕${NC} Update available: ${DIM}v${installed_version}${NC} → ${GREEN}v${VERSION}${NC}"
+      echo -e "  Run ${CYAN}bash install.sh --update${NC} to upgrade."
     fi
+  elif [[ -f "$skill_file" ]]; then
+    echo -e "  ${YELLOW}🆕${NC} Legacy install detected (pre-v0.2.0) — update to ${GREEN}v${VERSION}${NC}"
   else
-    msg_info "No existing Conductor installation found."
+    msg_info "No existing installation found."
   fi
 }
 
@@ -262,10 +260,10 @@ check_for_updates() {
 
 banner
 
-build_target_list
-
 if [[ "${FLAGS_update}" -eq "${FLAGS_TRUE}" ]]; then
   FLAGS_force="${FLAGS_TRUE}"
+  build_target_list
+
   version_file="${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
   if [[ -f "$version_file" ]]; then
     installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
@@ -274,11 +272,17 @@ if [[ "${FLAGS_update}" -eq "${FLAGS_TRUE}" ]]; then
       exit 0
     fi
     echo -e "  ${DIM}Installed:${NC} ${WHITE}v${installed_version}${NC}  →  ${GREEN}v${VERSION}${NC}"
+  elif [[ -f "${TARGET_SKILLS_ROOT}/conductor-setup/SKILL.md" ]]; then
+    echo -e "  ${DIM}Installed:${NC} ${YELLOW}pre-v0.2.0 (legacy)${NC}  →  ${GREEN}v${VERSION}${NC}"
   else
     msg_info "No existing installation found. Performing fresh install."
   fi
   echo ""
 fi
+
+build_target_list
+
+echo -e "  ${DIM}Target:${NC}  ${WHITE}${INSTALL_TARGET}${NC}"
 
 # =============================================================================
 # Uninstall
@@ -335,10 +339,10 @@ fi
 
 migrate_to_v0_11_0
 
-section "📄 Installing Conductor Templates"
+section "📄 Installing Conductor Setup Assets"
 echo ""
-install_file "${SOURCE_TEMPLATE_DIR}/workflow_template.md" "${TARGET_TEMPLATE_DIR}/workflow_template.md"
-install_file "${SOURCE_TEMPLATE_DIR}/adr_template.md" "${TARGET_TEMPLATE_DIR}/adr_template.md"
+install_file "${SOURCE_ASSETS_DIR}/workflow_template.md" "${TARGET_ASSETS_DIR}/workflow_template.md"
+install_file "${SOURCE_ASSETS_DIR}/adr_template.md" "${TARGET_ASSETS_DIR}/adr_template.md"
 
 if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
   msg_info "${YELLOW}[dry-run]${NC} Would write version file: ${GREEN}.conductor_version${NC}"
@@ -346,6 +350,15 @@ else
   mkdir -p "${TARGET_SKILLS_ROOT}/conductor-setup"
   echo "$VERSION" > "${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
   msg_success "Wrote version stamp: ${GREEN}v${VERSION}${NC}"
+fi
+
+section "📦 Installing Conductor Plugin Manifests"
+echo ""
+if [[ -f "${SCRIPT_DIR}/plugin.json" ]]; then
+  install_file "${SCRIPT_DIR}/plugin.json" "${TARGET_MANIFEST_ROOT}/plugin.json"
+fi
+if [[ -f "${SCRIPT_DIR}/.claude-plugin/marketplace.json" ]]; then
+  install_file "${SCRIPT_DIR}/.claude-plugin/marketplace.json" "${TARGET_MANIFEST_ROOT}/.claude-plugin/marketplace.json"
 fi
 
 section "🔧 Installing Conductor Command Skills"

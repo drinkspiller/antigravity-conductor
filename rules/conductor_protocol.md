@@ -61,7 +61,7 @@ these files (in order of priority):
     contradictions before proceeding (see `conductor_cdd_protocols.md` §9).
 
 Platform-specific behavior (VCS commands, path conventions) is injected by
-always-on platform rules. Do not hardcode VCS
+always-on platform rules (e.g., platform adapters). Do not hardcode VCS
 commands in skill protocols.
 
 ## 1. Core Operational Guardrails

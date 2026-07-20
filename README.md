@@ -147,4 +147,4 @@ appropriate command based on your prompt.
 
 ## Version
 
-Current: **v0.11.0**
+Current: **v0.11.1**
