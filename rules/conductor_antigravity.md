@@ -1,12 +1,12 @@
 ---
 trigger: always_on
-description: Conductor Jetski UX adapter - maps interaction requirements onto Jetski native rendering
+description: Conductor Antigravity UX adapter - maps interaction requirements onto Antigravity native rendering
 ---
 
-# Conductor Jetski UX Adapter (View Layer)
+# Conductor Antigravity UX Adapter (View Layer)
 
 This platform rule informs the agent how to optimally map universal Conductor
-interaction requirements onto Jetski's native visual rendering capabilities.
+interaction requirements onto Antigravity's native visual rendering capabilities.
 
 ## Interactive Interview Rendering
 
@@ -23,12 +23,9 @@ syntax displays as raw characters. Follow these rules:
 1.  **Short questions only.** The `question` field must be a single concise
     sentence (15 words or fewer). Never put analysis, findings, code references,
     or multi-line content in the question.
-2.  **Report first, ask second.** ALWAYS print your full analysis, findings,
-    candidate item lists, context, and code/spec quotes as regular markdown text
-    in your chat response FIRST before calling `ask_question`. Never ask the
-    user to evaluate or choose from items that were only described in your
-    internal thinking (`thought`) or summarized inside option labels. The modal
-    prompt must only ask the decision question.
+2.  **Report first, ask second.** Present analysis/findings as regular text in
+    your response (where markdown renders properly), then call `ask_question`
+    with only the decision question.
 3.  **Options are the user's voice.** Each option reads as something the user
     would say.
 4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No.
@@ -96,5 +93,5 @@ When creating conductor artifacts (spec.md, plan.md, etc.):
 
 1.  Write the **canonical version** to `{PROJECT_ROOT}/conductor/` (committed to
     VCS)
-2.  Create a **symlink** in the Jetski artifact directory pointing to the
+2.  Create a **symlink** in the agent artifact directory pointing to the
     canonical file for interactive review

@@ -62,7 +62,7 @@ SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor-setup/templates"
 SUB_SKILL_NAMES=(conductor-setup conductor-new-track conductor-implement conductor-status conductor-review conductor-revert conductor-chat)
 # Rules files (always-on rule files for MVC architecture)
 SOURCE_RULES_DIR="${SCRIPT_DIR}/rules"
-RULE_FILE_NAMES=(conductor_protocol.md conductor_jetski.md conductor_adr_preflight.md conductor_cdd_protocols.md)
+RULE_FILE_NAMES=(conductor_protocol.md conductor_antigravity.md conductor_adr_preflight.md conductor_cdd_protocols.md)
 
 # --- Color helpers ---
 RED='\033[0;31m'

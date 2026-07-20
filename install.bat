@@ -111,7 +111,7 @@ for %%S in (conductor-setup conductor-new-track conductor-implement conductor-st
 :: Rules
 echo.
 echo --- Installing Conductor Rules ---
-for %%R in (conductor_protocol.md conductor_jetski.md conductor_adr_preflight.md conductor_cdd_protocols.md) do (
+for %%R in (conductor_protocol.md conductor_antigravity.md conductor_adr_preflight.md conductor_cdd_protocols.md) do (
     call :install_file "%SOURCE_RULES_DIR%\%%R" "%TARGET_RULES_ROOT%\%%R"
 )
 
