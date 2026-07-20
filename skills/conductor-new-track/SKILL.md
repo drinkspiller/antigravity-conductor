@@ -61,7 +61,7 @@ phased plan.
         -   Use `ask_question` with your recommended answer listed first (`(Recommended)`) alongside 2–4 other plausible options.
         -   If a question can be answered by exploring the codebase, explore the codebase instead of asking.
         -   Follow branches where complexity, ambiguity, or trade-offs emerge.
-    -   **Domain Enforcement**: Actively challenge glossary conflicts against `product.md`, sharpen fuzzy language (`go/avoid-we`), and cross-reference stated behavior against the codebase.
+    -   **Domain Enforcement**: Actively challenge glossary conflicts against `product.md`, sharpen fuzzy language (avoiding 'we'/'us' in documentation), and cross-reference stated behavior against the codebase.
     -   **Inline Design Decision & ADR Elicitation**: As architectural trade-offs emerge during questioning:
         -   Evaluate the 3-part gate: (1) Hard to reverse, (2) Surprising without context, (3) Real trade-off.
         -   If all three criteria are met, immediately prompt using `ask_question`: "This decision looks worth recording. Create an ADR?" (`["Yes", "No", "Skip all ADR prompts for this track"]`).

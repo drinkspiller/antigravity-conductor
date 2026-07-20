@@ -4,7 +4,7 @@ setlocal EnableDelayedExpansion
 :: Antigravity Conductor Skills & Rules Installer (Windows)
 :: =============================================================================
 
-set "VERSION=0.11.0"
+set "VERSION=0.11.1"
 set "FLAGS_dry_run=0"
 set "FLAGS_force=0"
 set "FLAGS_uninstall=0"
@@ -36,12 +36,13 @@ exit /b 0
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-set "SOURCE_TEMPLATE_DIR=%SCRIPT_DIR%\skills\conductor-setup\templates"
+set "SOURCE_ASSETS_DIR=%SCRIPT_DIR%\skills\conductor-setup\assets"
 set "SOURCE_RULES_DIR=%SCRIPT_DIR%\rules"
 
 set "TARGET_SKILLS_ROOT=%USERPROFILE%\.gemini\antigravity\skills"
 set "TARGET_RULES_ROOT=%USERPROFILE%\.gemini\antigravity\rules"
-set "TARGET_TEMPLATE_DIR=%TARGET_SKILLS_ROOT%\conductor-setup\templates"
+set "TARGET_ASSETS_DIR=%TARGET_SKILLS_ROOT%\conductor-setup\assets"
+set "TARGET_MANIFEST_ROOT=%USERPROFILE%\.gemini\antigravity"
 
 echo.
 echo   ==================================================
@@ -67,7 +68,7 @@ if "%FLAGS_update%"=="1" (
 if "%FLAGS_uninstall%"=="1" goto :do_uninstall
 
 :: Validate sources
-if not exist "%SOURCE_TEMPLATE_DIR%\workflow_template.md" ( echo [ERROR] Missing %SOURCE_TEMPLATE_DIR%\workflow_template.md & exit /b 1 )
+if not exist "%SOURCE_ASSETS_DIR%\workflow_template.md" ( echo [ERROR] Missing %SOURCE_ASSETS_DIR%\workflow_template.md & exit /b 1 )
 for %%S in (conductor-setup conductor-new-track conductor-implement conductor-status conductor-review conductor-revert conductor-chat) do (
     if not exist "%SCRIPT_DIR%\skills\%%S\SKILL.md" ( echo [ERROR] Missing %SCRIPT_DIR%\skills\%%S\SKILL.md & exit /b 1 )
 )
@@ -86,11 +87,11 @@ for %%O in (conductor_setup conductor_newTrack conductor_newTrack_grill conducto
     )
 )
 
-:: Templates
+:: Assets
 echo.
-echo --- Installing Conductor Templates ---
-call :install_file "%SOURCE_TEMPLATE_DIR%\workflow_template.md" "%TARGET_TEMPLATE_DIR%\workflow_template.md"
-call :install_file "%SOURCE_TEMPLATE_DIR%\adr_template.md" "%TARGET_TEMPLATE_DIR%\adr_template.md"
+echo --- Installing Conductor Assets ---
+call :install_file "%SOURCE_ASSETS_DIR%\workflow_template.md" "%TARGET_ASSETS_DIR%\workflow_template.md"
+call :install_file "%SOURCE_ASSETS_DIR%\adr_template.md" "%TARGET_ASSETS_DIR%\adr_template.md"
 
 :: Version Stamp
 if "%FLAGS_dry_run%"=="1" (
@@ -100,6 +101,12 @@ if "%FLAGS_dry_run%"=="1" (
     echo %VERSION%> "%TARGET_SKILLS_ROOT%\conductor-setup\.conductor_version"
     echo Wrote version stamp: v%VERSION%
 )
+
+:: Manifests
+echo.
+echo --- Installing Conductor Plugin Manifests ---
+if exist "%SCRIPT_DIR%\plugin.json" call :install_file "%SCRIPT_DIR%\plugin.json" "%TARGET_MANIFEST_ROOT%\plugin.json"
+if exist "%SCRIPT_DIR%\.claude-plugin\marketplace.json" call :install_file "%SCRIPT_DIR%\.claude-plugin\marketplace.json" "%TARGET_MANIFEST_ROOT%\.claude-plugin\marketplace.json"
 
 :: Sub-Skills
 echo.
