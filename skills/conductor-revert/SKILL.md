@@ -1,74 +1,18 @@
 ---
-name: conductor_revert
-description: Undo work from a track, phase, or task using VCS-aware revert. Use when asked to revert a track, undo changes, roll back work, or run /conductor_revert.
+name: conductor-revert
+description: Undo work from a track, phase, or task using VCS-aware revert. Use when asked to revert a track, undo changes, roll back work, or run /conductor-revert.
+persona: Conductor Surgeon
 ---
 
-# /conductor_revert — Undo Work
+# /conductor-revert — Undo Work
 
 **Purpose:** Undo work from a track, phase, or task using VCS-aware revert.
-
-## `ask_question` Best Practices
-
-The `ask_question` modal renders text with **limited formatting** — markdown
-syntax like `**bold**`, backticks, and numbered lists display as raw characters.
-Follow these rules to keep questions readable:
-
-1.  **Short questions only.** The `question` field must be a single concise
-    sentence (aim for ≤ 15 words). Never put analysis, findings, code
-    references, status reports, or multi-line content in the question.
-2.  **Report first, ask second.** Present any analysis, findings, or context as
-    **regular text in your response** (where markdown renders properly), then
-    call `ask_question` with only the decision question and options.
-3.  **Options are the user's voice.** Each option string should read as
-    something the user would say — not a description of what you will do.
-4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
-    decision has nuance.
-
-### Examples
-
-**BAD — commit details in the question:**
-
-```
-question: "Found 3 commits to revert: abc1234 'Add user model', def5678
-'Update plan.md', ghi9012 'Add tests for user model'. The revert will be
-applied in reverse order. Approve?"
-options: ["Yes", "No"]
-```
-
-**GOOD — commit details in an artifact, question is just the decision:**
-
-First, write the revert preview as an artifact listing all commits. Then call
-`ask_question`:
-
-```
-question: "Revert plan ready (3 commits). How should I proceed?"
-options: [
-  "Approve — execute the revert",
-  "Let me review the commit list first",
-  "Revise — I want to exclude some commits",
-  "Cancel the revert"
-]
-```
-
-**More good examples:**
-
-```
-question: "Recorded SHA not found — likely rewritten by rebase. Use the new one?"
-options: [
-  "Yes, use the new SHA",
-  "No, let me find the right commit",
-  "Show me the git log so I can verify"
-]
-```
 
 ## Protocol
 
 ### 1. Setup Check
 
-1.  **Ask for `{PROJECT_ROOT}`:** Ask the user to specify the project root path
-    containing the `conductor/` directory (e.g., the repository path). Use
-    this path as `{PROJECT_ROOT}` for all operations in this session.
-2.  **Verify tracks.md:** Check if `{PROJECT_ROOT}/conductor/tracks.md` exists
+1.  **Verify tracks.md:** Check if `{PROJECT_ROOT}/conductor/tracks.md` exists
     and is not empty. If it is missing or empty, halt execution and inform the
     user that Conductor is not initialized or there are no tracks to revert.
 
@@ -101,8 +45,7 @@ Wait for the user to make a selection.
 
 ### 3. VCS Reconciliation
 
-Once the target is selected, gather the commits to revert from the VCS history
-(git, Mercurial, etc.).
+Once the target is selected, gather the commits to revert from VCS history.
 
 1.  **Find Primary SHAs:** Locate the primary SHA(s) or revisions recorded in
     `plan.md` for the target.
@@ -120,9 +63,9 @@ Once the target is selected, gather the commits to revert from the VCS history
 
 ### 4. Final Execution Plan
 
-Before executing the revert, present a plan to the user using an artifact.
+Before executing the revert, present a plan to the user using a Jetski artifact.
 
-1.  **Preview the Revert:** Write a revert preview as an artifact (using
+1.  **Preview the Revert:** Write a revert preview as a Jetski artifact (using
     `write_to_file` with `IsArtifact: true`, `ArtifactType: other`). Save it to
     a logical artifact path (e.g.,
     `{PROJECT_ROOT}/conductor/artifacts/revert_preview.md`). The artifact should
@@ -141,11 +84,8 @@ Before executing the revert, present a plan to the user using an artifact.
 
 ### 5. Execution & Verification
 
-1.  **Execute the Revert:** Use the appropriate VCS command for each commit,
-    working from most recent to oldest:
-    *   **git:** `git revert --no-edit <sha>`
-    *   **hg:** `hg backout -r <rev>`
-    *   **Other VCS:** Use the appropriate revert/rollback command.
+1.  **Execute the Revert:** Use VCS commands to revert each commit, working from
+    most recent to oldest.
 2.  **Handle Conflicts:** If merge conflicts occur during the revert process,
     halt execution immediately and provide the user with manual resolution
     instructions. Do not attempt to auto-resolve complex revert conflicts.

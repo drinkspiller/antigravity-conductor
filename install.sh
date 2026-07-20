@@ -1,17 +1,18 @@
 #!/bin/bash
 # =============================================================================
-# Antigravity Conductor Skills & Workflows Installer
-# Copies Conductor skill and workflow files to Antigravity directory.
+# Antigravity Conductor Skills & Rules Installer
+# Copies Conductor skill and rule files to Antigravity directory.
 #
 # Usage:
 #   bash install.sh
 #   bash install.sh --dry_run
 #   bash install.sh --force
 #   bash install.sh --uninstall
+#   bash install.sh --update
 #
 # Target locations:
-#   ~/.gemini/antigravity/skills/conductor/SKILL.md
-#   ~/.gemini/antigravity/global_workflows/conductor_*.md
+#   ~/.gemini/antigravity/skills/conductor-*/SKILL.md
+#   ~/.gemini/antigravity/rules/conductor_*.md
 # =============================================================================
 
 FLAGS_TRUE=0
@@ -52,14 +53,16 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-VERSION="0.2.2"
+VERSION="0.11.0"
 
 # --- Resolve source directory (relative to this script) ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_SKILL_DIR="${SCRIPT_DIR}/skills/conductor"
-SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor/templates"
+SOURCE_TEMPLATE_DIR="${SCRIPT_DIR}/skills/conductor-setup/templates"
 # Sub-skill names (each has its own directory under skills/)
-SUB_SKILL_NAMES=(conductor_setup conductor_newTrack conductor_implement conductor_status conductor_review conductor_revert conductor_chat)
+SUB_SKILL_NAMES=(conductor-setup conductor-new-track conductor-implement conductor-status conductor-review conductor-revert conductor-chat)
+# Rules files (always-on rule files for MVC architecture)
+SOURCE_RULES_DIR="${SCRIPT_DIR}/rules"
+RULE_FILE_NAMES=(conductor_protocol.md conductor_jetski.md conductor_adr_preflight.md conductor_cdd_protocols.md)
 
 # --- Color helpers ---
 RED='\033[0;31m'
@@ -83,7 +86,7 @@ banner() {
   echo ""
   echo -e "${MAGENTA}  ╔══════════════════════════════════════════════════╗${NC}"
   echo -e "${MAGENTA}  ║${NC}  ${BOLD}🎵 Antigravity Conductor Installer${NC}  ${DIM}v${VERSION}${NC}      ${MAGENTA}║${NC}"
-  echo -e "${MAGENTA}  ║${NC}  ${DIM}Skills & Workflows for Antigravity${NC}               ${MAGENTA}║${NC}"
+  echo -e "${MAGENTA}  ║${NC}  ${DIM}Skills & Rules for Antigravity${NC}                    ${MAGENTA}║${NC}"
   echo -e "${MAGENTA}  ╚══════════════════════════════════════════════════╝${NC}"
   echo ""
 }
@@ -93,10 +96,6 @@ section() { echo -e "\n${BLUE}━━━${NC} ${BOLD}$*${NC} ${BLUE}━━━━�
 # --- Validate source files exist ---
 validate_sources() {
   local missing=0
-  if [[ ! -f "${SOURCE_SKILL_DIR}/SKILL.md" ]]; then
-    msg_error "Source not found: ${SOURCE_SKILL_DIR}/SKILL.md"
-    ((missing++))
-  fi
   if [[ ! -f "${SOURCE_TEMPLATE_DIR}/workflow_template.md" ]]; then
     msg_error "Source not found: ${SOURCE_TEMPLATE_DIR}/workflow_template.md"
     ((missing++))
@@ -104,6 +103,12 @@ validate_sources() {
   for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
     if [[ ! -f "${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md" ]]; then
       msg_error "Source not found: ${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md"
+      ((missing++))
+    fi
+  done
+  for rule_file in "${RULE_FILE_NAMES[@]}"; do
+    if [[ ! -f "${SOURCE_RULES_DIR}/${rule_file}" ]]; then
+      msg_error "Source not found: ${SOURCE_RULES_DIR}/${rule_file}"
       ((missing++))
     fi
   done
@@ -125,19 +130,20 @@ fi
 
 INSTALL_TARGET="antigravity"
 TARGET_SKILLS_ROOT="${USER_HOME}/.gemini/antigravity/skills"
-TARGET_SKILL_DIR="${TARGET_SKILLS_ROOT}/conductor"
-TARGET_WORKFLOW_DIR="${USER_HOME}/.gemini/antigravity/global_workflows"
+TARGET_RULES_ROOT="${USER_HOME}/.gemini/antigravity/rules"
+TARGET_TEMPLATE_DIR="${TARGET_SKILLS_ROOT}/conductor-setup/templates"
 
 build_target_list() {
-  TARGET_TEMPLATE_DIR="${TARGET_SKILL_DIR}/templates"
   ALL_TARGET_FILES=(
-    "${TARGET_SKILL_DIR}/SKILL.md"
     "${TARGET_TEMPLATE_DIR}/workflow_template.md"
-    "${TARGET_SKILL_DIR}/.conductor_version"
+    "${TARGET_TEMPLATE_DIR}/adr_template.md"
+    "${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
   )
-  # Add each sub-skill SKILL.md
   for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
     ALL_TARGET_FILES+=("${TARGET_SKILLS_ROOT}/${sub_skill}/SKILL.md")
+  done
+  for rule_file in "${RULE_FILE_NAMES[@]}"; do
+    ALL_TARGET_FILES+=("${TARGET_RULES_ROOT}/${rule_file}")
   done
 }
 
@@ -184,57 +190,83 @@ install_file() {
   fi
 }
 
+# --- Migrate to hyphenated skills & remove deprecated skills (v0.10.0 → v0.11.0) ---
+migrate_to_v0_11_0() {
+  local old_skills=(
+    "conductor_setup"
+    "conductor_newTrack"
+    "conductor_newTrack_grill"
+    "conductor_newTrack_discovery"
+    "conductor_implement"
+    "conductor_status"
+    "conductor_review"
+    "conductor_revert"
+    "conductor_chat"
+    "conductor"
+  )
+
+  local deprecated_found=()
+  for old_skill in "${old_skills[@]}"; do
+    local old_dir="${TARGET_SKILLS_ROOT}/${old_skill}"
+    if [[ -d "$old_dir" ]]; then
+      deprecated_found+=("$old_dir")
+    fi
+  done
+
+  if [[ ${#deprecated_found[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  section "🔄 Skill Renaming & Cleanup (v0.11.0)"
+  echo ""
+  msg_warn "Found ${#deprecated_found[@]} deprecated/underscore skill directory(ies):"
+  for d in "${deprecated_found[@]}"; do
+    echo -e "     ${DIM}${d}${NC}"
+  done
+  echo ""
+
+  if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
+    for d in "${deprecated_found[@]}"; do
+      msg_info "${YELLOW}[dry-run]${NC} Would remove deprecated skill directory: ${CYAN}${d}${NC}"
+    done
+    return 0
+  fi
+
+  for d in "${deprecated_found[@]}"; do
+    rm -rf "$d"
+    msg_success "Removed deprecated skill directory: ${CYAN}${d}${NC}"
+  done
+}
+
+# --- Version check ---
+check_for_updates() {
+  local latest_version="${VERSION}"
+  local version_file="${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
+
+  if [[ -f "$version_file" ]]; then
+    local installed_version
+    installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
+    if [[ "$installed_version" == "$latest_version" ]]; then
+      msg_success "${WHITE}antigravity${NC}: Up to date (${WHITE}v${installed_version}${NC})"
+    else
+      echo -e "  ${YELLOW}🆕${NC}  ${WHITE}antigravity${NC}: Update available — ${DIM}v${installed_version}${NC} → ${GREEN}v${latest_version}${NC}"
+    fi
+  else
+    msg_info "No existing Conductor installation found."
+  fi
+}
+
 # =============================================================================
 # Main flow
 # =============================================================================
 
-check_for_updates() {
-  local latest_version="${VERSION}"
-
-  local install_dirs=(
-    "${USER_HOME}/.gemini/antigravity/skills/conductor"
-  )
-  local found_any=false
-
-  for dir in "${install_dirs[@]}"; do
-    local version_file="${dir}/.conductor_version"
-    local skill_file="${dir}/SKILL.md"
-    local target_name="antigravity"
-
-    if [[ -f "$version_file" ]]; then
-      found_any=true
-      local installed_version
-      installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
-
-      if [[ "$installed_version" == "$latest_version" ]]; then
-        msg_success "${WHITE}${target_name}${NC}: Up to date (${WHITE}v${installed_version}${NC})"
-      else
-        echo -e "  ${YELLOW}🆕${NC}  ${WHITE}${target_name}${NC}: Update available — ${DIM}v${installed_version}${NC} → ${GREEN}v${latest_version}${NC}"
-      fi
-    elif [[ -f "$skill_file" ]]; then
-      found_any=true
-      echo -e "  ${YELLOW}🆕${NC}  ${WHITE}${target_name}${NC}: Legacy install detected (pre-v0.2.1) — update to ${GREEN}v${latest_version}${NC}"
-    fi
-  done
-
-  if [[ "$found_any" == false ]]; then
-    msg_info "No existing Conductor installations found."
-    msg_info "Run ${CYAN}install.sh${NC} to install."
-  else
-    echo ""
-    echo -e "  ${DIM}To update, run:${NC}"
-    echo -e "  ${CYAN}bash install.sh --update${NC}"
-  fi
-}
-
 banner
+
+build_target_list
 
 if [[ "${FLAGS_update}" -eq "${FLAGS_TRUE}" ]]; then
   FLAGS_force="${FLAGS_TRUE}"
-
-  build_target_list
-
-  version_file="${TARGET_SKILL_DIR}/.conductor_version"
+  version_file="${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
   if [[ -f "$version_file" ]]; then
     installed_version=$(cat "$version_file" 2>/dev/null | tr -d '[:space:]')
     if [[ "$installed_version" == "$VERSION" ]]; then
@@ -242,19 +274,11 @@ if [[ "${FLAGS_update}" -eq "${FLAGS_TRUE}" ]]; then
       exit 0
     fi
     echo -e "  ${DIM}Installed:${NC} ${WHITE}v${installed_version}${NC}  →  ${GREEN}v${VERSION}${NC}"
-  elif [[ -f "${TARGET_SKILL_DIR}/SKILL.md" ]]; then
-    echo -e "  ${DIM}Installed:${NC} ${YELLOW}pre-v0.2.1 (legacy)${NC}  →  ${GREEN}v${VERSION}${NC}"
   else
     msg_info "No existing installation found. Performing fresh install."
   fi
   echo ""
 fi
-
-if [[ -z "${INSTALL_TARGET:-}" ]]; then
-  build_target_list
-fi
-
-echo -e "  ${DIM}Target:${NC}  ${WHITE}${INSTALL_TARGET}${NC}"
 
 # =============================================================================
 # Uninstall
@@ -277,14 +301,17 @@ if [[ "${FLAGS_uninstall}" -eq "${FLAGS_TRUE}" ]]; then
     fi
   done
 
-  if [[ -d "$TARGET_SKILL_DIR" ]] && [[ -z "$(ls -A "$TARGET_SKILL_DIR" 2>/dev/null)" ]]; then
-    if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
-      msg_info "${YELLOW}[dry-run]${NC} Would remove empty directory: ${DIM}${TARGET_SKILL_DIR}${NC}"
-    else
-      rmdir "$TARGET_SKILL_DIR"
-      msg_success "Cleaned up empty directory: ${DIM}${TARGET_SKILL_DIR}${NC}"
+  for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
+    local sub_dir="${TARGET_SKILLS_ROOT}/${sub_skill}"
+    if [[ -d "$sub_dir" ]] && [[ -z "$(ls -A "$sub_dir" 2>/dev/null)" ]]; then
+      if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
+        msg_info "${YELLOW}[dry-run]${NC} Would remove empty directory: ${DIM}${sub_dir}${NC}"
+      else
+        rmdir "$sub_dir"
+        msg_success "Cleaned up empty directory: ${DIM}${sub_dir}${NC}"
+      fi
     fi
-  fi
+  done
 
   echo ""
   if [[ $removed -eq 0 ]]; then
@@ -306,39 +333,40 @@ if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
   echo -e "  ${YELLOW}👀 DRY RUN MODE — no files will be written${NC}"
 fi
 
-# --- Skill ---
-section "🧠 Installing Conductor Skill"
-echo ""
-install_file "${SOURCE_SKILL_DIR}/SKILL.md" "${TARGET_SKILL_DIR}/SKILL.md"
+migrate_to_v0_11_0
 
-# --- Templates ---
 section "📄 Installing Conductor Templates"
 echo ""
 install_file "${SOURCE_TEMPLATE_DIR}/workflow_template.md" "${TARGET_TEMPLATE_DIR}/workflow_template.md"
+install_file "${SOURCE_TEMPLATE_DIR}/adr_template.md" "${TARGET_TEMPLATE_DIR}/adr_template.md"
 
-# --- Write version stamp ---
 if [[ "${FLAGS_dry_run}" -eq "${FLAGS_TRUE}" ]]; then
   msg_info "${YELLOW}[dry-run]${NC} Would write version file: ${GREEN}.conductor_version${NC}"
 else
-  echo "$VERSION" > "${TARGET_SKILL_DIR}/.conductor_version"
+  mkdir -p "${TARGET_SKILLS_ROOT}/conductor-setup"
+  echo "$VERSION" > "${TARGET_SKILLS_ROOT}/conductor-setup/.conductor_version"
   msg_success "Wrote version stamp: ${GREEN}v${VERSION}${NC}"
 fi
 
-# --- Sub-Skills ---
 section "🔧 Installing Conductor Command Skills"
 echo ""
 for sub_skill in "${SUB_SKILL_NAMES[@]}"; do
   install_file "${SCRIPT_DIR}/skills/${sub_skill}/SKILL.md" "${TARGET_SKILLS_ROOT}/${sub_skill}/SKILL.md"
 done
 
-# --- Summary ---
+section "📏 Installing Conductor Rules"
+echo ""
+for rule_file in "${RULE_FILE_NAMES[@]}"; do
+  install_file "${SOURCE_RULES_DIR}/${rule_file}" "${TARGET_RULES_ROOT}/${rule_file}"
+done
+
 section "📊 Summary"
 echo ""
 echo -e "  ${DIM}Version:${NC}       ${WHITE}${VERSION}${NC}"
 echo -e "  ${DIM}Target:${NC}        ${WHITE}${INSTALL_TARGET}${NC}"
 echo -e "  ${DIM}Source:${NC}        ${CYAN}${SCRIPT_DIR}${NC}"
-echo -e "  ${DIM}Skill dir:${NC}     ${CYAN}${TARGET_SKILL_DIR}${NC}"
-echo -e "  ${DIM}Sub-skills:${NC}    ${CYAN}${TARGET_SKILLS_ROOT}/conductor_*/${NC}"
+echo -e "  ${DIM}Skills:${NC}        ${CYAN}${TARGET_SKILLS_ROOT}/conductor-*/${NC}"
+echo -e "  ${DIM}Rules dir:${NC}     ${CYAN}${TARGET_RULES_ROOT}${NC}"
 echo -e "  ${DIM}Files:${NC}         ${WHITE}${#ALL_TARGET_FILES[@]}${NC} total"
 echo ""
 

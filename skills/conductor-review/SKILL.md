@@ -1,84 +1,19 @@
 ---
-name: conductor_review
-description: Review completed work against specifications, guidelines, and quality gates. Use when asked to review a track, check work quality, run acceptance criteria, or run /conductor_review.
+name: conductor-review
+description: Review completed work against specifications, guidelines, and quality gates. Use when asked to review a track, check work quality, run acceptance criteria, or run /conductor-review.
+persona: Principal Software Engineer
 ---
 
-# /conductor_review — Review Completed Work
+# /conductor-review — Review Completed Work
 
 **Purpose:** Review completed work against specifications and guidelines to
 ensure code quality, correctness, and adherence to project standards.
-
-## `ask_question` Best Practices
-
-The `ask_question` modal renders text with **limited formatting** — markdown
-syntax like `**bold**`, backticks, and numbered lists display as raw characters.
-Follow these rules to keep questions readable:
-
-1.  **Short questions only.** The `question` field must be a single concise
-    sentence (aim for ≤ 15 words). Never put analysis, findings, code
-    references, status reports, or multi-line content in the question.
-2.  **Report first, ask second.** Present any analysis, findings, or context as
-    **regular text in your response** (where markdown renders properly), then
-    call `ask_question` with only the decision question and options.
-3.  **Options are the user's voice.** Each option string should read as
-    something the user would say — not a description of what you will do.
-4.  **Go beyond binary.** Prefer 3-4 meaningful options over Yes/No whenever the
-    decision has nuance.
-
-### Examples
-
-**BAD — review findings crammed into the question:**
-
-```
-question: "Review found: 2 Critical issues (missing null check in UserModel.ts
-line 47, SQL injection risk in query builder), 3 Medium issues. I recommend
-fixing Critical issues before moving forward. What would you like to do?"
-options: ["Apply Fixes", "Skip"]
-```
-
-**GOOD — findings in the review artifact, question is just the decision:**
-
-First, write findings to the review artifact and present it. Then call
-`ask_question`:
-
-```
-question: "2 critical and 3 medium issues found. How should we proceed?"
-options: [
-  "Auto-fix all issues",
-  "Auto-fix critical only, I'll handle the rest",
-  "I'll fix everything manually",
-  "Proceed without fixing"
-]
-```
-
-**More good examples:**
-
-```
-question: "The diff is 450+ lines. Use iterative review mode?"
-options: [
-  "Yes, review file by file",
-  "No, do a high-level summary instead",
-  "Let me narrow the scope first"
-]
-```
-
-```
-question: "Review is complete. What should we do with the track?"
-options: [
-  "Archive the track",
-  "Delete the track (irreversible)",
-  "Leave it in place for now"
-]
-```
 
 ## Protocol
 
 ### 1. Initialization
 
-1.  **Ask the user** to specify the project root path containing the
-    `conductor/` directory if not already known. Use this path as
-    `{PROJECT_ROOT}` for all operations in this session.
-2.  **Setup Check (§1.1):** Verify the following core files exist in
+1.  **Setup Check (§1.1):** Verify the following core files exist in
     `{PROJECT_ROOT}/conductor/`:
     -   `tracks.md`
     -   `product.md`
@@ -116,14 +51,11 @@ options: [
 
 #### 2.3 Smart Chunking & Review Process
 
-1.  **Volume check:** Run the appropriate diff stat command for the workspace's
-    VCS:
-    -   `git diff --shortstat <range>`
-    -   `hg diff --stat -r <start_rev>:<end_rev>`
-    -   Or equivalent command for the detected VCS
+1.  **Volume check:** Run the appropriate VCS diff stat command for the
+    workspace.
 2.  Determine diff size:
     -   **Small/Medium (<300 lines):** Perform a single-pass review by reading
-        the full diff output (`git diff <range>`, `hg diff`, etc.).
+        the full diff output.
     -   **Large (>300 lines):** Confirm with the user via `ask_question`:
         "Iterative Review Mode may take longer. Proceed?"
         -   If yes: List changed files. Review each source file individually
@@ -134,21 +66,31 @@ options: [
 
 #### 2.4 Analysis Checklist
 
-Evaluate the changed code against the following criteria: - **Intent
-verification:** Does the implementation fulfill the requirements in `plan.md`
-and `spec.md`? - **Style compliance:** Are `product-guidelines.md` and
-`code_styleguides/*.md` rules followed? - **Correctness & safety:** Check for
-bugs, race conditions, null risks, and perform a security scan for hardcoded
-secrets or PII. - **Testing:** Check for new tests covering the changes. Attempt
-to run the test suite automatically via the project's build tool. -
-**Skill-specific checks:** Apply specialized guidelines from relevant installed
-skills.
+Evaluate the changed code against the following criteria:
+
+-   **Intent verification:** Does the implementation fulfill the requirements in
+    `plan.md` and `spec.md`?
+-   **ADR compliance:** For each ADR in `{PROJECT_ROOT}/conductor/adr/` that was
+    created or modified during this track (or is active in the modified
+    modules), verify that the implementation adheres to the recorded decision.
+-   **Invariant compliance:** For each invariant in
+    `{PROJECT_ROOT}/conductor/invariants.md` whose scope includes files changed
+    in this track, verify that the implementation honors the behavioral
+    contract.
+-   **Style compliance:** Are `product-guidelines.md` and
+    `code_styleguides/*.md` rules followed?
+-   **Correctness & safety:** Check for bugs, race conditions, null risks, and
+    perform a security scan for hardcoded secrets or PII.
+-   **Testing:** Check for new tests covering the changes. Attempt to run the
+    test suite automatically via the project's build tool.
+-   **Skill-specific checks:** Apply specialized guidelines from relevant
+    installed skills.
 
 ### 3. Review & Resolution
 
 #### 3.1 Report & Decision
 
-Generate a strict review report as an artifact (save to
+Generate a strict review report as a Jetski artifact (save to
 `{PROJECT_ROOT}/conductor/tracks/<track_name>/review.md` if reviewing a track,
 using `write_to_file` with `IsArtifact: true`, `ArtifactType: walkthrough`).
 
@@ -160,12 +102,14 @@ Use the following strict output format for the report:
 
 ## Verification Checks
 - Intent vs Spec: [Pass/Fail]
+- ADR Compliance: [Pass/Fail]
+- Invariant Compliance: [Pass/Fail]
 - Style Compliance: [Pass/Fail]
 - Correctness & Safety: [Pass/Fail]
 - Testing: [Pass/Fail]
 
 ## Findings
-*(Categorize as Critical, High, Medium, or Low severity. Include the file path, context, and a code diff suggestion for fixing.)*
+*(Categorize as Critical, High, Medium, or Low severity. Include the file path, context, and a code diff suggestion for fixing. If an ADR compliance divergence was accepted as tech debt, document it here with a 'Tech Debt' tag.)*
 
 ### Critical / High
 - ...
@@ -177,15 +121,54 @@ Use the following strict output format for the report:
 Once the artifact is created, use `notify_user` with `PathsToReview` pointing to
 the `review.md` file.
 
+**ADR Compliance Resolution**: If the analysis checklist identified any
+divergences between the implementation and an active ADR:
+
+-   For each divergence, call `ask_question` with a randomized prompt:
+    *   "ADR-{NNNN} says '{decision}', but the implementation diverges: {desc}.
+        Intentional?"
+    *   "The code doesn't match the decision record. {file}:{line} does X but
+        ADR-{NNNN} says Y."
+    *   "Decision drift: ADR-{NNNN} expected '{expected}' but found '{actual}'
+        in {file}. What's the call?"
+    *   *Options*: `["Fix the code", "Update the ADR", "Acknowledge as tech
+        debt"]`
+-   Handle the selection:
+    -   **Fix the code**: Treat this as a High severity finding in the review
+        report, and include a code diff suggestion.
+    -   **Update the ADR**: Trigger a draft update to the corresponding
+        `{PROJECT_ROOT}/conductor/adr/NNNN-slug.md` file to reflect the new
+        architectural reality. Enter the Draft Review Loop for the ADR.
+    -   **Acknowledge as tech debt**: Record the divergence in the review report
+        under 'Medium / Low' findings, tagged as `[Tech Debt]`.
+
+**Invariant Compliance Resolution**: If the analysis checklist identified any
+divergences between the implementation and an active invariant:
+
+-   For each divergence, call `ask_question` with a randomized prompt:
+    *   "Invariant {ID} says '{rule}', but the code diverges: {desc}.
+        Intentional?"
+    *   "The implementation violates {ID}: expected '{expected}' but found
+        '{actual}' in {file}."
+    *   *Options*: `["Fix the code", "Update the invariant", "Acknowledge as
+        tech debt"]`
+-   Handle the selection using the same protocol as ADR compliance resolution.
+
+**Invariant Capture from Findings**: If the review flags a correctness or safety
+issue that implies a behavioral invariant (e.g., "race condition: X must
+complete before Y", "null check required before Z"), and the fix establishes an
+ordering or initialization constraint, follow the Invariant Capture Protocol in
+`conductor_cdd_protocols.md` §10 after the fix is applied.
+
 Based on the findings, present an overall recommendation via a structured choice
 (`ask_question`): - If Critical/High issues exist: "I recommend fixing before
 moving forward." - If Medium/Low issues only: "Changes look good, some minor
 suggestions." - If none: "Everything looks great!"
 
 Present options to the user: 1. **Apply Fixes:** Automatically apply the
-suggested fixes using file editing tools. 2. **Manual Fix:** Halt to let the
-user address the findings manually. 3. **Complete Track:** Proceed without
-applying fixes.
+suggested fixes (including code fixes and ADR updates) using file editing
+tools. 2. **Manual Fix:** Halt to let the user address the findings manually. 3.
+**Complete Track:** Proceed without applying fixes.
 
 Wait for the user's response and act accordingly.
 

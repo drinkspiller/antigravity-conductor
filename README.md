@@ -117,13 +117,13 @@ automatically at the end of every regular install.
 In Antigravity, typing `/` opens an autocomplete dropdown listing available workflows. The conductor commands are available globally once installed:
 
 ```
-/conductor_setup          # Initialize a project's conductor/ context
-/conductor_newTrack       # Create a new feature or bug fix track
-/conductor_implement      # Execute the current track's plan
-/conductor_status         # View progress across all tracks
-/conductor_review         # Review completed work against spec
-/conductor_revert         # Undo work from a track, phase, or task
-/conductor_chat           # Ingest conductor knowledge, then go — no tracks or gates.
+/conductor-setup          # Initialize a project's conductor/ context
+/conductor-new-track       # Create a new feature or bug fix track
+/conductor-implement      # Execute the current track's plan
+/conductor-status         # View progress across all tracks
+/conductor-review         # Review completed work against spec
+/conductor-revert         # Undo work from a track, phase, or task
+/conductor-chat           # Ingest conductor knowledge, then go — no tracks or gates.
                           # Ideal for asking how things work, exploring the codebase
                           # with full context, or diving into lightweight implementations
                           # that don't warrant a dedicated track.
@@ -147,4 +147,4 @@ appropriate command based on your prompt.
 
 ## Version
 
-Current: **v0.2.2**
+Current: **v0.11.0**
